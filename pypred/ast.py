@@ -15,6 +15,11 @@ class LogicalOperator(Node):
         self.left = left
         self.right = right
 
+class NegateOperator(Node):
+    "Used to negate a result"
+    def __init__(self, expr):
+        self.expr = expr
+
 class CompareOperator(Node):
     "Used for all the mathematical comparisons"
     def __init__(self, comparison, left, right):
