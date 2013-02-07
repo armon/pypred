@@ -67,7 +67,11 @@ class MatchOperator(Node):
 class Regex(Node):
     "Regular expression literal"
     def __init__(self, value):
-        self.value = value
+        # Unpack a Node object if we are given one
+        if isinstance(value, Node):
+            self.value = value.value
+        else:
+            self.value = value
 
 class Literal(Node):
     "String literal"
