@@ -109,7 +109,7 @@ import ply.yacc as yacc
 import ast
 
 precedence = (
-    ('left', 'AND', 'OR'),
+    ('right', 'AND', 'OR'),
     ('right', 'NOT'),
 )
 
@@ -148,7 +148,7 @@ def p_contains(p):
 
 def p_matchse(p):
     "term : factor MATCHES factor"
-    p[0] = ast.MatchOperator(p[1], p[3])
+    p[0] = ast.MatchOperator(p[1], ast.Regex(p[3]))
 
 def p_term_factor(p):
     "term : factor"
