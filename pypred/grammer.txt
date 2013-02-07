@@ -1,0 +1,26 @@
+expression : expression AND expression
+     | expression OR expression
+     | NOT expression
+     | term
+
+term : factor GREATER_THAN factor
+       | factor GREATER_THAN_EQUALS factor
+       | factor LESS_THAN factor
+       | factor LESS_THAN_EQUALS factor
+       | factor EQUALS factor
+       | factor NOT_EQUALS factor
+       | factor IS_EQUALS NOT factor
+       | factor IS_EQUALS factor
+       | factor CONTAINS factor
+       | factor MATCHES factor
+       | factor
+
+factor : NUMBER
+       | STRING
+       | TRUE
+       | FALSE
+       | UNDEFINED
+       | NULL
+       | EMPTY
+       | LPAREN expression RPAREN
+
