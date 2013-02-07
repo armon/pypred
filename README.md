@@ -54,6 +54,8 @@ interface, which is the `Predicate` class. It is instantiated with
 a string predicate.
 
 The main interface for it is:
+* Predicate(Pred) : Creates a new predicate object
+
 * Predicate.is\_valid() : Returns if the predicate is valid
 
 * Predicate.parse\_errors(): If not valid, returns a list of parse errors
@@ -64,4 +66,6 @@ The main interface for it is:
 * Predicate.analyze(document) : Evaluates the given document against the predicate,
   returns the results, as well as a dictionary that includes more information about
   the evaluation, including the failure reasons
+
+
 
