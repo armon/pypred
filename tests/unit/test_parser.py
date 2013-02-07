@@ -31,4 +31,24 @@ class TestParser(object):
             "Literal v:Jill"
         ])
 
+    def test_event_parse(self):
+        inp = 'event is "Record Score" and \
+        ((score >= 500 and highest_score_wins) or (score < 10 and lowest_score_wins))'
+        self.assert_nodes(inp, [
+"LogicalOperator t:and l:CompareOperator r:LogicalOperator",
+    "CompareOperator t:is l:Literal r:Literal",
+        "Literal v:event",
+        "Literal v:\"Record Score\"",
+    "LogicalOperator t:or l:LogicalOperator r:LogicalOperator",
+        "LogicalOperator t:and l:CompareOperator r:Literal",
+            "CompareOperator t:>= l:Literal r:Number",
+                "Literal v:score",
+                "Number v:500.0",
+            "Literal v:highest_score_wins",
+        "LogicalOperator t:and l:CompareOperator r:Literal",
+            "CompareOperator t:< l:Literal r:Number",
+                "Literal v:score",
+                "Number v:10.0",
+            "Literal v:lowest_score_wins",
+        ])
 
