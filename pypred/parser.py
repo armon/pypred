@@ -2,6 +2,9 @@
 This module makes use of the Python PLY package
 to parse the grammars
 """
+###
+# Implements the lexer
+###
 import ply.lex as lex
 
 reserved = {
@@ -14,7 +17,8 @@ reserved = {
     'true': 'TRUE',
     'false': 'FALSE',
     'undefined': 'UNDEFINED',
-    'null': 'NULL'
+    'null': 'NULL',
+    'empty': 'EMPTY'
 }
 
 tokens = (
@@ -38,7 +42,8 @@ tokens = (
     'TRUE',
     'FALSE',
     'UNDEFINED',
-    'NULL'
+    'NULL',
+    'EMPTY'
 )
 
 # Regex rules for tokens
@@ -89,4 +94,15 @@ def t_error(t):
 def get_lexer():
     "Returns a new instance of the lexer"
     return lex.lex()
+
+###
+# Implements the parser
+###
+import ply.yacc as yacc
+
+
+
+def get_parser():
+    "Returns a new instance of the parser"
+    return yacc.yacc()
 

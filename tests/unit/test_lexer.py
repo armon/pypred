@@ -70,7 +70,7 @@ class TestLexer(object):
         self.assert_types(inp, expected)
 
     def test_constants(self):
-        inp = "true false undefined null"
-        expected = ['TRUE', 'FALSE', 'UNDEFINED', 'NULL']
+        inp = "true false undefined null empty"
+        expected = ['TRUE', 'FALSE', 'UNDEFINED', 'NULL', 'EMPTY']
         self.assert_types(inp, expected)
 
