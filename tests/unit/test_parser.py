@@ -16,7 +16,7 @@ class TestParser(object):
 
         # Get the class names
         names = [repr(n) for n in nodes]
-        assert len(names) == len(exp_nodes)
+        #assert len(names) == len(exp_nodes)
         assert names == exp_nodes
 
     def test_jack_and_jill(self):
@@ -50,5 +50,21 @@ class TestParser(object):
                 "Literal v:score",
                 "Number v:10.0",
             "Literal v:lowest_score_wins",
+        ])
+
+    def test_server_parse(self):
+        inp ='server matches "east-web-([\d]+)" and errors contains "CPU load" and environment != test'
+        self.assert_nodes(inp, [
+"LogicalOperator t:and l:MatchOperator r:LogicalOperator",
+    "MatchOperator l:Literal r:Regex",
+        "Literal v:server",
+        "Regex v:\"east-web-([\d]+)\"",
+     "LogicalOperator t:and l:ContainsOperator r:CompareOperator",
+        "ContainsOperator l:Literal r:Literal",
+            "Literal v:errors",
+            "Literal v:\"CPU load\"",
+        "CompareOperator t:!= l:Literal r:Literal",
+            "Literal v:environment",
+            "Literal v:test"
         ])
 
