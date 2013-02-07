@@ -3,6 +3,6 @@ env
 build
 
 # Ignore the parser outputs
-pypred/parsetab.py
-pypred/parser.out
+parsetab.py
+parser.out
 
