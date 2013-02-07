@@ -22,6 +22,7 @@ It supports the following:
 * The regular expression matcher `matches`
 * String literals, quoted if they include spaces
 * Numeric literals
+* Constants true, false, undefined, null
 
 Grammer Examples
 ================
