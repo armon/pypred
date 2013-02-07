@@ -73,7 +73,6 @@ def t_STRING(t):
     r'([\w_\-.:;]+|"[^"]*"|\'[^\']*\')'
     # Check for reserved words
     t.type = reserved.get(t.value,'STRING')
-    t.value = t.value.strip("\"'")
     return t
 
 # Track the newlines
