@@ -8,22 +8,47 @@ class Node(object):
     def __init__(self):
         return
 
+    def pre(self, func):
+        """
+        Performs a pre-order traversal of the
+        tree, and invokes a callback for each node.
+        """
+        func(self)
+        if hasattr(self, "left"):
+            self.left.pre(func)
+        if hasattr(self, "right"):
+            self.right.pre(func)
+
+    def __repr__(self):
+        name = self.__class__.__name__
+        r = name
+        if hasattr(self, "type"):
+            r += " t:" + str(self.type)
+        if hasattr(self, "value"):
+            r += " v:" + str(self.value)
+        if hasattr(self, "left"):
+            r += " l:" + self.left.__class__.__name__
+        if hasattr(self, "right"):
+            r += " r:" + self.right.__class__.__name__
+        return r
+
+
 class LogicalOperator(Node):
     "Used for the logical operators"
     def __init__(self, op, left, right):
-        self.operator = op
+        self.type = op
         self.left = left
         self.right = right
 
 class NegateOperator(Node):
     "Used to negate a result"
     def __init__(self, expr):
-        self.expr = expr
+        self.left = expr
 
 class CompareOperator(Node):
     "Used for all the mathematical comparisons"
     def __init__(self, comparison, left, right):
-        self.comparison = comparison
+        self.type = comparison
         self.left = left
         self.right = right
 
@@ -42,7 +67,7 @@ class MatchOperator(Node):
 class Regex(Node):
     "Regular expression literal"
     def __init__(self, value):
-        self.re_str = value
+        self.value = value
 
 class Literal(Node):
     "String literal"
