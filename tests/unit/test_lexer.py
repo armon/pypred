@@ -74,3 +74,19 @@ class TestLexer(object):
         expected = ['TRUE', 'FALSE', 'UNDEFINED', 'NULL', 'EMPTY']
         self.assert_types(inp, expected)
 
+    def test_error(self):
+        inp = "!! foo"
+        lexer = parser.get_lexer()
+        lexer.input(inp)
+        tokens = list(lexer)
+        assert [t.type for t in tokens] == ['STRING']
+        assert len(lexer.errors) == 1
+        assert lexer.errors[0] == ('!!', 0, 1)
+
+    def test_comments(self):
+        inp = "# foo is bar\nfoo and bar"
+        lexer = parser.get_lexer()
+        lexer.input(inp)
+        tokens = list(lexer)
+        assert [t.type for t in tokens] == ['STRING', 'AND', 'STRING']
+
