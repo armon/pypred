@@ -129,7 +129,7 @@ def p_expression_term(p):
 
 def p_term_is_not(p):
     "term : factor IS_EQUALS NOT factor"
-    p[0] = ast.CompareOperator("NOT_EQUALS", p[1], p[3])
+    p[0] = ast.CompareOperator("!=", p[1], p[4])
 
 def p_term_comparison(p):
     """term : factor GREATER_THAN factor
