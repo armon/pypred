@@ -155,7 +155,7 @@ class LogicalOperator(Node):
             return False
 
     def failure_info(self, pred, doc, info):
-        l = self.left.eval(pred, doc, info)
+        l = self.left.eval(pred, doc)
         if self.type == "and" and not l:
             err = "Left hand side of " + self.name() + " failed"
             info["failed"].append(err)
@@ -221,8 +221,8 @@ class CompareOperator(Node):
             return left < right
 
     def failure_info(self, pred, doc, info):
-        l = self.left.eval(pred, doc, info)
-        r = self.right.eval(pred, doc, info)
+        l = self.left.eval(pred, doc)
+        r = self.right.eval(pred, doc)
 
         # Check if it was a failure due to undefined or empty
         if self.type not in ('=', '!=', 'is') and \
@@ -258,8 +258,8 @@ class ContainsOperator(Node):
         return right in left
 
     def failure_info(self, pred, doc, info):
-        left = self.left.eval(pred, doc, info)
-        right = self.right.eval(pred, doc, info)
+        left = self.left.eval(pred, doc)
+        right = self.right.eval(pred, doc)
 
         err = "Right side: %s not in left side: %s for %s" \
                 % (repr(right), repr(left), self.name())
@@ -290,7 +290,7 @@ class MatchOperator(Node):
         return match is not None
 
     def failure_info(self, pred, doc, info):
-        left = self.left.eval(pred, doc, info)
+        left = self.left.eval(pred, doc)
         re_str = self.right.value
         err = "Regex %s does not match %s for %s" % \
                 (repr(re_str), repr(left), self.name())
