@@ -93,7 +93,7 @@ class Undefined(Node):
     def __init__(self):
         return
 
-def Empty(Node):
+class Empty(Node):
     "Represents the null set"
     def __init__(self):
         return
