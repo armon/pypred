@@ -64,7 +64,6 @@ t_ignore_COMMENT = r'\#.*'
 
 def t_NUMBER(t):
     r'-?\d+(\.\d+)?'
-    t.value = float(t.value)
     return t
 
 # Matches either a sequence of non-whitespace
