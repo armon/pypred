@@ -117,6 +117,14 @@ class TestParser(object):
     "Constant v:None"
 ])
 
+    def test_is_not(self):
+        inp = "bad is not null"
+        self.assert_nodes(inp, [
+"CompareOperator t:!= l:Literal r:Constant",
+    "Literal v:bad",
+    "Constant v:None"
+])
+
     def test_error_end(self):
         inp = "false and"
         lexer = parser.get_lexer()
