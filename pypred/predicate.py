@@ -57,13 +57,37 @@ class Predicate(object):
         self.ast_valid, self.ast_errors = self.ast.validate()
         return self.ast_valid
 
-    def parse_errors(self):
+    def errors(self):
         "Returns all the errors if the predicate is not valid"
-        # Clone the ast errors
-        info = dict(self.ast_errors)
+        errors = []
 
-        # Merge all the errors in order
-        info["errors"] = self.lexer_errors + self.parser_errors + list(info["errors"])
+        # Add the lexer errors in a friendly way
+        for char, pos, line in self.lexer_errors:
+            e = "Failed to parse characters %s at line %d, col %d" % \
+                    (char, pos, line)
+            errors.append(e)
+
+        # Add the parser errors in a friendly way
+        for err in self.parser_errors:
+            if isinstance(err, tuple) and len(err) == 5:
+                _, _, val, pos, line = err
+                e = "Syntax error with %s at line %d, col %d" % \
+                    (val, pos, line)
+                errors.append(e)
+            elif isinstance(err, str):
+                errors.append(err)
+            else:
+                errors.append(repr(err))
+
+        # Copy the ast errors
+        for err in self.ast_errors["errors"]:
+            errors.append(err)
+
+        # Build info dict
+        info = {
+            "errors": errors,
+            "regex": self.ast_errors["regex"]
+        }
         return info
 
     def description(self):
@@ -96,7 +120,7 @@ class Predicate(object):
         """
         # Treat anything that is quoted as a string literal
         if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
-            return identifier.strip(identifier[0])
+            return identifier[1:-1]
 
         # Check for the identifier in the document
         if identifier in document:
