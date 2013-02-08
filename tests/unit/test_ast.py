@@ -69,7 +69,7 @@ class TestAST(object):
         assert not valid
         assert "Contains operator must take" in info["errors"][0]
 
-    def test_contains_valid(self):
+    def test_contains_valid_args(self):
         a = ast.ContainsOperator(ast.Literal("foo"), ast.Literal("bar"))
         valid, info = a.validate()
         assert valid
@@ -235,4 +235,47 @@ class TestAST(object):
             assert ("%s comparison at" % type.upper()) in info["failed"][0]
         assert info["literals"]["l"] == d["l"]
         assert info["literals"]["r"] == ast.Empty()
+
+    def test_contains_invalid(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.ContainsOperator(l, r)
+        d = {"l": 1, "r": None}
+        res, info = a.analyze(MockPred(), d)
+        assert not res
+        assert "does not support contains" in info["failed"][0]
+        assert info["literals"]["l"] == 1
+        assert "r" not in info["literals"]
+
+    def test_contains_undef(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.ContainsOperator(l, r)
+        d = {"r": 5}
+        res, info = a.analyze(MockPred(), d)
+        assert not res
+        assert "not in left side" in info["failed"][0]
+        assert info["literals"]["l"] == ast.Undefined()
+        assert info["literals"]["r"] == 5
+
+    def test_contains_empty(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.ContainsOperator(l, r)
+        d = {"l": [], "r": 5}
+        res, info = a.analyze(MockPred(), d)
+        assert not res
+        assert "not in left side" in info["failed"][0]
+        assert info["literals"]["l"] == []
+        assert info["literals"]["r"] == 5
+
+    def test_contains_valid(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.ContainsOperator(l, r)
+        d = {"l": [42], "r": 42}
+        res, info = a.analyze(MockPred(), d)
+        assert res
+        assert info["literals"]["l"] == [42]
+        assert info["literals"]["r"] == 42
 

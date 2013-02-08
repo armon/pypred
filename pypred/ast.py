@@ -253,15 +253,21 @@ class ContainsOperator(Node):
     @failure_info
     def eval(self, pred, doc, info=None):
         left = self.left.eval(pred, doc, info)
-        right = self.right.eval(pred, doc, info)
-        return right in left
+        if hasattr(left, "__contains__"):
+            right = self.right.eval(pred, doc, info)
+            return right in left
+        return False
 
     def failure_info(self, pred, doc, info):
         left = self.left.eval(pred, doc)
-        right = self.right.eval(pred, doc)
+        if not hasattr(left, "__contains__"):
+            err = "Left side: %s does not support contains for %s" \
+                % (repr(left), self.name())
+        else:
+            right = self.right.eval(pred, doc)
+            err = "Right side: %s not in left side: %s for %s" \
+                    % (repr(right), repr(left), self.name())
 
-        err = "Right side: %s not in left side: %s for %s" \
-                % (repr(right), repr(left), self.name())
         info["failed"].append(err)
 
 
