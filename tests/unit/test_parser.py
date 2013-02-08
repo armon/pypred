@@ -1,6 +1,7 @@
 """
 Unit tests for the lexer
 """
+import pytest
 from pypred import parser, ast
 
 class TestParser(object):
@@ -115,4 +116,11 @@ class TestParser(object):
     "Literal v:bad",
     "Constant v:None"
 ])
+
+    def test_error_end(self):
+        inp = "false and"
+        lexer = parser.get_lexer()
+        p = parser.get_parser()
+        with pytest.raises(SyntaxError):
+            p.parse(inp, lexer=lexer)
 
