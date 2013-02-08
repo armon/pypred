@@ -108,3 +108,11 @@ class TestParser(object):
         "Empty"
 ])
 
+    def test_null(self):
+        inp = "bad is null"
+        self.assert_nodes(inp, [
+"CompareOperator t:is l:Literal r:Constant",
+    "Literal v:bad",
+    "Constant v:None"
+])
+

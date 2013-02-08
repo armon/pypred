@@ -174,7 +174,7 @@ def p_factor_constants(p):
     elif p[1] == "false":
         p[0] = ast.Constant(False)
     elif p[1] == "null":
-        p[0] = ast.Constants(None)
+        p[0] = ast.Constant(None)
     elif p[1] == "undefined":
         p[0] = ast.Undefined()
     elif p[1] == "empty":
