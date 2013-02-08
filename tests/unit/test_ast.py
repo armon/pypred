@@ -279,3 +279,43 @@ class TestAST(object):
         assert info["literals"]["l"] == [42]
         assert info["literals"]["r"] == 42
 
+    def test_match_bad_types(self):
+        l = ast.Literal("l")
+        r = ast.Regex(ast.Literal('abcd'))
+        a = ast.MatchOperator(l, r)
+        d = {"l": 42}
+        res, info = a.analyze(MockPred(), d)
+        assert not res
+        assert "not a string" in info["failed"][0]
+        assert info["literals"]["l"] == 42
+
+    def test_match_undef(self):
+        l = ast.Literal("l")
+        r = ast.Regex(ast.Literal('abcd'))
+        a = ast.MatchOperator(l, r)
+        d = {}
+        res, info = a.analyze(MockPred(), d)
+        assert not res
+        assert "not a string" in info["failed"][0]
+        assert info["literals"]["l"] == ast.Undefined()
+
+    def test_match_no_match(self):
+        l = ast.Literal("l")
+        r = ast.Regex(ast.Literal('abcd'))
+        a = ast.MatchOperator(l, r)
+        d = {"l": "tubez"}
+        res, info = a.analyze(MockPred(), d)
+        assert not res
+        assert "does not match" in info["failed"][0]
+        assert info["literals"]["l"] == "tubez"
+
+    def test_match(self):
+        l = ast.Literal("l")
+        r = ast.Regex(ast.Literal('abcd'))
+        a = ast.MatchOperator(l, r)
+        d = {"l": "abcd"}
+        res, info = a.analyze(MockPred(), d)
+        assert res
+        assert info["literals"]["l"] == "abcd"
+
+

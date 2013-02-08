@@ -297,8 +297,12 @@ class MatchOperator(Node):
     def failure_info(self, pred, doc, info):
         left = self.left.eval(pred, doc)
         re_str = self.right.value
-        err = "Regex %s does not match %s for %s" % \
-                (repr(re_str), repr(left), self.name())
+        if not isinstance(left, str):
+            err = "Regex %s argument %s not a string" % \
+                    (repr(re_str), repr(left))
+        else:
+            err = "Regex %s does not match %s for %s" % \
+                    (repr(re_str), repr(left), self.name())
         info["failed"].append(err)
 
 
@@ -311,6 +315,7 @@ class Regex(Node):
             self.position = value.position
         else:
             self.value = value
+        self.re = None
 
     def name(self):
         return "Regex %s at %s" % (repr(self.value), self.position)
@@ -334,6 +339,8 @@ class Regex(Node):
         return True
 
     def eval(self, pred, doc, info=None):
+        if not self.re:
+            self.re = re.compile(self.value)
         return self.re
 
 
