@@ -39,7 +39,7 @@ class TestAST(object):
         a = ast.Regex(42)
         valid, info = a.validate()
         assert not valid
-        assert "Regex must be a string" in info["errors"][0]
+        assert "must be a string" in info["errors"][0]
 
     def test_bad_regex(self):
         a = ast.Regex("(abc")
@@ -61,7 +61,7 @@ class TestAST(object):
         a = ast.MatchOperator(ast.Literal("foo"), ast.Literal("bar"))
         valid, info = a.validate()
         assert not valid
-        assert "Match operator must take a regex" in info["errors"][0]
+        assert "must take a regex" in info["errors"][0]
 
     def test_contains_bad(self):
         a = ast.ContainsOperator(ast.Literal("foo"), ast.Empty())
