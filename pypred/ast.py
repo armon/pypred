@@ -8,9 +8,9 @@ from functools import wraps
 
 # Helper decorator to provide eval information
 def eval_info(func):
-    @wraps
+    @wraps(func)
     def wrapper(self, pred, doc, info=None):
-        res = func(pred, doc, info)
+        res = func(self, pred, doc, info)
         if not res and info:
             info["failed"].append(repr(self))
         return res

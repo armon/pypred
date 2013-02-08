@@ -43,17 +43,17 @@ class Predicate(object):
 
     def is_valid(self):
         "Checks if the predicate is valid"
-        self.ast_validated = True
+        if self.ast_validated:
+            return self.ast_valid
         if self.lexer_errors:
             return False
         if self.parser_errors:
             return False
         if not self.ast:
             return False
-        if self.ast_validated:
-            return self.ast_valid
 
         # Valid the AST once
+        self.ast_validated = True
         self.ast_valid, self.ast_errors = self.ast.validate()
         return self.ast_valid
 
