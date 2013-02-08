@@ -1,3 +1,20 @@
 name is "Jack" # true
 name is "Jack" and friend is 'Jill' # true
 server matches 'east-web-\d+' and load >= 1 # true
+errors contains 'cpu load' or load >= 2 # true
+errors is empty or errors contains 'disk full' # true
+status < 300 # false
+status < 300 or errors is not empty # true
+nested.source is 'twitter' and nested.tweet.text matches 'love' # true
+nested.source is 'twitter' and nested.tweet.text matches '^I love' # true
+name is friend # false
+false or false or false or false or true # true
+true and true and true and true and false # false
+true is false # false
+false is empty # false
+foobar is undefined # true
+undefined is empty # true
+empty is undefined # true
+val > val2 or val < val2 # true
+nested contains 'tweet' # true
+thingy is 200 and val is 100 # false

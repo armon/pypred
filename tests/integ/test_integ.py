@@ -16,6 +16,8 @@ DOC = {
     "errors": ["disk full", "cpu load"],
     "status": 500,
     "nested": {"source": "twitter", "tweet": {"text": "I love coffee!"}},
+    "val": 100,
+    "val2": 200,
 }
 
 
@@ -25,9 +27,17 @@ def test_samples():
     for line, pred in enumerate(fh):
         pred = pred.strip()
         obj = Predicate(pred)
-        assert obj.is_valid(), pred
-        res, info = obj.analyze(DOC)
+        if not obj.is_valid():
+            print "Invalid Predicate!"
+            print "Line: ", line
+            print "Predicate: ", pred
+            info = obj.errors()
+            print "Errors: ", "\n".join(info["errors"])
+            for k, v in info["regex"].iteritems():
+                print "\t%s : %s" % (k, repr(v))
+            assert False
 
+        res, info = obj.analyze(DOC)
         if not pred.endswith("true") and not pred.endswith("false"):
             print "Line: ", line
             print "Unknown result!"
