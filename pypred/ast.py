@@ -31,6 +31,20 @@ class Node(object):
         cls = self.__class__.__name__
         return "%s at %s" % (cls, self.position)
 
+    def description(self, buf=None, depth=0):
+        """
+        Provides a human readable tree description
+        """
+        if not buf:
+            buf = ""
+        pad = depth * "\t"
+        buf += pad + self.name() + "\n"
+        if hasattr(self, "left"):
+            buf = self.left.description(buf, depth+1)
+        if hasattr(self, "right"):
+            buf = self.right.description(buf, depth+1)
+        return buf
+
     def __repr__(self):
         """
         Provides a representation that is useful to check the AST
