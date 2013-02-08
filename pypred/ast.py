@@ -214,7 +214,7 @@ class MatchOperator(Node):
     def eval(self, pred, doc, info=None):
         left = self.left.eval(pred, doc, info)
         right = self.right.eval(pred, doc, info)
-        if not isinstance(left, isinstance(str)):
+        if not isinstance(left, str):
             if info: info["failed"].append("Regex %s input %s is not a string!" % (self.right.value, repr(left)))
             return False
         match = right.search(left)
