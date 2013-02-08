@@ -11,7 +11,7 @@ def failure_info(func):
     @wraps(func)
     def wrapper(self, pred, doc, info=None):
         r = func(self, pred, doc, info)
-        if not r and info:
+        if not r and info is not None:
             self.failure_info(pred, doc, info)
         return r
     return wrapper
