@@ -246,7 +246,7 @@ class ContainsOperator(Node):
     def _validate(self, info):
         if not isinstance(self.right, (Number, Literal, Constant)):
             errs = info["errors"]
-            errs.append("Contains operator must take a literal or constant! Got: %s" % repr(self.right))
+            errs.append("Contains operator must take a literal or constant! Got: %s for %s" % (repr(self.right), self.name()))
             return False
         return True
 
@@ -280,7 +280,7 @@ class MatchOperator(Node):
     def _validate(self, info):
         if not isinstance(self.right, Regex):
             errs = info["errors"]
-            errs.append("Match operator must take a regex! Got: %s" % repr(self.right))
+            errs.append("%s must take a regex! Got: %s" % (self.name(), repr(self.right)))
             return False
         return True
 
@@ -323,7 +323,8 @@ class Regex(Node):
     def _validate(self, info):
         if not isinstance(self.value, str):
             errs = info["errors"]
-            errs.append("Regex must be a string! Got: %s" % repr(self.value))
+            errs.append("Regex at %s must be a string! Got: %s" % \
+                    (self.position, repr(self.value)))
             return False
 
         # Try to compile
@@ -374,7 +375,8 @@ class Number(Node):
     def _validate(self, info):
         if not isinstance(self.value, float):
             errs = info["errors"]
-            errs.append("Failed to convert number to float! Got: %s" % self.value)
+            errs.append("Failed to convert number at %s to float! Got: %s" % \
+                    (self.position, self.value))
             return False
         return True
 
@@ -393,7 +395,8 @@ class Constant(Node):
     def _validate(self, info):
         if self.value not in (True, False, None):
             errs = info["errors"]
-            errs.append("Invalid Constant! Got: %s" % self.value)
+            errs.append("Invalid Constant at %s! Got: %s" % \
+                    (self.position, self.value))
             return False
         return True
 
