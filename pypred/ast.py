@@ -19,9 +19,8 @@ def failure_info(func):
 
 class Node(object):
     "Root object in the AST tree"
-    def __init__(self):
-        # Set to true in our _validate method
-        self.position = "line: ?, col: ?"
+    # Unknown default position
+    position = "line: ?, col: ?"
 
     def set_position(self, line, col):
         self.position = "line: %d, col %d" % (line, col)
@@ -303,8 +302,12 @@ class Regex(Node):
         # Unpack a Node object if we are given one
         if isinstance(value, Node):
             self.value = value.value.strip("'\"")
+            self.position = value.position
         else:
             self.value = value
+
+    def name(self):
+        return "Regex %s at %s" % (repr(self.value), self.position)
 
     def _validate(self, info):
         if not isinstance(self.value, str):
@@ -394,9 +397,21 @@ class Undefined(Node):
         "Acts like False"
         return False
 
+    def __contains__(self, o):
+        return False
+
     def __eq__(self, other):
         "Only equal to undefined"
         return isinstance(other, Undefined)
+
+    def __ne__(self, other):
+        """
+        Comparing undefined to another undefined works,
+        but fails against any other type
+        """
+        if isinstance(other, Undefined):
+            return False
+        return True
 
     def eval(self, pred, doc, info=None):
         return False
