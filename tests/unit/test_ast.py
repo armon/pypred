@@ -208,13 +208,10 @@ class TestAST(object):
         res, info = a.analyze(MockPred(), d)
 
         # Determine the expected result
-        if type == "=":
-            s = '%d %s %d' % (d["l"], "==", d["r"])
+        if type == "!=":
+            assert res
         else:
-            s = '%d %s %d' % (d["l"], type, d["r"])
-        expected = eval(s)
-
-        assert res == expected
+            assert not res
         if not res:
             assert ("%s comparison at" % type.upper()) in info["failed"][0]
         assert info["literals"]["l"] == d["l"]
