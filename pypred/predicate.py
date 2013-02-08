@@ -15,7 +15,17 @@ class Predicate(object):
     resolve_identifier to change the evaluation of the predicate.
     """
     def __init__(self, predicate, debug=0):
-        "Initializes the Predicate object with the string predicate."
+        """
+        Initializes the Predicate object with the string predicate.
+
+        Arguments:
+            predicate : String predicate
+            debug : optional, defaults to 0. Controls the debug behavior
+             of the underlying parser and lexer.
+
+        Returns:
+            Predicate object
+        """
         # Validate the predicate
         if not isinstance(predicate, str):
             raise TypeError("Predicate must be a string!")
@@ -58,7 +68,7 @@ class Predicate(object):
         return self.ast_valid
 
     def errors(self):
-        "Returns all the errors if the predicate is not valid"
+        "Returns a list of all the errors if the predicate is not valid"
         errors = []
 
         # Add the lexer errors in a friendly way
@@ -106,7 +116,11 @@ class Predicate(object):
         """
         Evaluates a predicate against the input document,
         while trying to provide additional information about
-        the cause of failure
+        the cause of failure. Returns a tuple of (Result, Info).
+        Result is a boolean, and info is a dictionary containing
+        "failed" and "literals". The failed key has all the failure
+        reasons in order. The literals dict contains the resolved
+        values for all literals.
         """
         if not self.is_valid():
             raise InvalidPredicate
