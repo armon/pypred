@@ -179,6 +179,8 @@ def p_factor_constants(p):
         p[0] = ast.Undefined()
     elif p[1] == "empty":
         p[0] = ast.Empty()
+    else:
+        raise SyntaxError
 
 def p_factor_parens(p):
     "factor : LPAREN expression RPAREN"

@@ -95,3 +95,16 @@ class TestParser(object):
     "NegateOperator l:Constant",
         "Constant v:True",
 ])
+
+    def test_undef_and_empty(self):
+        inp = "errors is undefined or errors is empty"
+        self.assert_nodes(inp, [
+"LogicalOperator t:or l:CompareOperator r:CompareOperator",
+    "CompareOperator t:is l:Literal r:Undefined",
+        "Literal v:errors",
+        "Undefined",
+    "CompareOperator t:is l:Literal r:Empty",
+        "Literal v:errors",
+        "Empty"
+])
+
