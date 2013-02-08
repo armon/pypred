@@ -162,4 +162,18 @@ class TestAST(object):
         assert "r" not in info["literals"]
         assert "Left hand side" in info["failed"][0]
 
+    def test_negate_false(self):
+        l = ast.Literal("l")
+        a = ast.NegateOperator(l)
+        res, info = a.analyze(MockPred(), {"l": False})
+        assert res
+        assert info["literals"]["l"] == False
+
+    def test_negate_true(self):
+        l = ast.Literal("l")
+        a = ast.NegateOperator(l)
+        res, info = a.analyze(MockPred(), {"l": True})
+        assert not res
+        assert info["literals"]["l"] == True
+
 
