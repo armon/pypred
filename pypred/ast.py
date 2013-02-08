@@ -18,14 +18,20 @@ class Node(object):
         which is returned
         """
         if info is None:
-            info = {}
+            info = {"errors": [], "regex": {}}
 
         # Post order validation
+        v = True
         if hasattr(self, "left"):
-            self.left.validate(info)
+            sub_v, _ =  self.left.validate(info)
+            v &= sub_v
         if hasattr(self, "right"):
-            self.right.validate(info)
+            sub_v, _ = self.right.validate(info)
+            v &= sub_v
+
         self.valid = self._validate(info)
+        v &= self.valid
+        return (v, info)
 
     def _validate(self, info):
         "Validates the node"
@@ -66,7 +72,7 @@ class LogicalOperator(Node):
     def _validate(self, info):
         "Validates the node"
         if self.type not in ("and", "or"):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Unknown logical operator %s" % self.type)
             return False
         return True
@@ -85,7 +91,7 @@ class CompareOperator(Node):
 
     def _validate(self, info):
         if self.type not in (">=", ">", "<", "<=", "=", "!=", "is"):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Unknown compare operator %s" % self.type)
             return False
         return True
@@ -98,7 +104,7 @@ class ContainsOperator(Node):
 
     def _validate(self, info):
         if not isinstance(self.right, (Number, Literal, Constant)):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Contains operator must take a literal or constant! Got: %s" % repr(self.right))
             return False
         return True
@@ -111,7 +117,7 @@ class MatchOperator(Node):
 
     def _validate(self, info):
         if not isinstance(self.right, Regex):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Match operator must take a regex! Got: " % repr(self.right))
             return False
         return True
@@ -127,7 +133,7 @@ class Regex(Node):
 
     def _validate(self, info):
         if not isinstance(self.value, str):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Regex must be a string! Got: " % repr(self.value))
             return False
 
@@ -135,9 +141,9 @@ class Regex(Node):
         try:
             self.re = re.compile(self.value)
         except Exception, e:
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Regex compilation failed")
-            regexes = info.setdefault("regex", {})
+            regexes = info["regex"]
             regexes[self.value] = repr(e)
             return False
 
@@ -158,7 +164,7 @@ class Number(Node):
 
     def _validate(self, info):
         if not isinstance(self.value, float):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Failed to convert number to float! Got: %s" % self.value)
             return False
         return True
@@ -170,7 +176,7 @@ class Constant(Node):
 
     def _validate(self, info):
         if self.value not in (True, False, None):
-            errs = info.setdefault("errors", [])
+            errs = info["errors"]
             errs.append("Invalid Constant! Got: %s" % self.value)
             return False
         return True
