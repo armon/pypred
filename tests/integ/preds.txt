@@ -1,0 +1,3 @@
+name is "Jack" # true
+name is "Jack" and friend is 'Jill' # true
+server matches 'east-web-\d+' and load >= 1 # true
