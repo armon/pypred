@@ -110,7 +110,7 @@ class Predicate(object):
         return self.ast.description()
 
     def evaluate(self, document):
-        "Evaluates the predicate against the document"
+        "Evaluates the predicate against the document."
         if not self.is_valid():
             raise InvalidPredicate
         return self.ast.evaluate(self, document)
@@ -119,7 +119,10 @@ class Predicate(object):
         """
         Evaluates a predicate against the input document,
         while trying to provide additional information about
-        the cause of failure. Returns a tuple of (Result, Info).
+        the cause of failure. This is generally much slower
+        that using the equivilent `evaluate`.
+
+        Returns a tuple of (Result, Info).
         Result is a boolean, and info is a dictionary containing
         "failed" and "literals". The failed key has all the failure
         reasons in order. The literals dict contains the resolved

@@ -66,7 +66,8 @@ The main interface for it is:
 
 * Predicate.analyze(document) : Evaluates the given document against the predicate,
   returns the results, as well as a dictionary that includes more information about
-  the evaluation, including the failure reasons
+  the evaluation, including the failure reasons. This is generally much slower than
+  evaluate in the failure cases.
 
 One of the critical aspects of evaluating a predicate is the resolution of
 literals. When the AST needs a value to substitute a variable, it calls the
