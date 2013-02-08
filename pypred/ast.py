@@ -430,7 +430,7 @@ class Undefined(Node):
         return True
 
     def eval(self, pred, doc, info=None):
-        return False
+        return self
 
 
 class Empty(Node):
@@ -451,5 +451,5 @@ class Empty(Node):
         return len(other) == 0
 
     def eval(self, pred, doc, info=None):
-        return False
+        return self
 
