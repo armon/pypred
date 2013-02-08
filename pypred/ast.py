@@ -78,7 +78,7 @@ class Node(object):
         Evaluates the AST tree against the document for the
         given predicate.
         """
-        info = {}
+        info = {"failed":[]}
         res = bool(self.eval(pred, document, info))
         return res, info
 
