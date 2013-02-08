@@ -49,3 +49,39 @@ class TestAST(object):
         assert "(abc" in info["regex"]
         assert info["regex"]["(abc"] == "unbalanced parenthesis"
 
+    def test_match_bad_arg(self):
+        a = ast.MatchOperator(ast.Literal("foo"), ast.Literal("bar"))
+        valid, info = a.validate()
+        assert not valid
+        assert "Match operator must take a regex" in info["errors"][0]
+
+    def test_contains_bad(self):
+        a = ast.ContainsOperator(ast.Literal("foo"), ast.Empty())
+        valid, info = a.validate()
+        assert not valid
+        assert "Contains operator must take" in info["errors"][0]
+
+    def test_contains_valid(self):
+        a = ast.ContainsOperator(ast.Literal("foo"), ast.Literal("bar"))
+        valid, info = a.validate()
+        assert valid
+
+    def test_bad_compare(self):
+        a = ast.CompareOperator("!", ast.Literal("foo"), ast.Empty())
+        valid, info = a.validate()
+        assert not valid
+        assert "Unknown compare" in info["errors"][0]
+
+    def test_bad_logic(self):
+        a = ast.LogicalOperator("!", ast.Literal("foo"), ast.Empty())
+        valid, info = a.validate()
+        assert not valid
+        assert "Unknown logical" in info["errors"][0]
+
+    def test_bad_child(self):
+        c = ast.CompareOperator("!", ast.Literal("foo"), ast.Empty())
+        a = ast.LogicalOperator("and", ast.Literal("foo"), c)
+        valid, info = a.validate()
+        assert not valid
+        assert "Unknown compare" in info["errors"][0]
+

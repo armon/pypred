@@ -118,7 +118,7 @@ class MatchOperator(Node):
     def _validate(self, info):
         if not isinstance(self.right, Regex):
             errs = info["errors"]
-            errs.append("Match operator must take a regex! Got: " % repr(self.right))
+            errs.append("Match operator must take a regex! Got: %s" % repr(self.right))
             return False
         return True
 
