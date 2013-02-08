@@ -10,7 +10,7 @@ more complex situations.
 Grammer
 =======
 
-The grammer that PyPred understands if fairly limited, and is restricted
+The grammer that PyPred understands is fairly limited, and is restricted
 to boolean logic.
 
 It supports the following:
