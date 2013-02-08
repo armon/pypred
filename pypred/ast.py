@@ -26,6 +26,39 @@ class Node(object):
     def set_position(self, line, col):
         self.position = "line: %d, col %d" % (line, col)
 
+    def name(self):
+        "Provides human name with location"
+        cls = self.__class__.__name__
+        return "%s at %s" % (cls, self.position)
+
+    def __repr__(self):
+        """
+        Provides a representation that is useful to check the AST
+        but is not necesarily very usable as a user error message.
+        """
+        name = self.__class__.__name__
+        r = name
+        if hasattr(self, "type"):
+            r += " t:" + str(self.type)
+        if hasattr(self, "value"):
+            r += " v:" + str(self.value)
+        if hasattr(self, "left"):
+            r += " l:" + self.left.__class__.__name__
+        if hasattr(self, "right"):
+            r += " r:" + self.right.__class__.__name__
+        return r
+
+    def pre(self, func):
+        """
+        Performs a pre-order traversal of the
+        tree, and invokes a callback for each node.
+        """
+        func(self)
+        if hasattr(self, "left"):
+            self.left.pre(func)
+        if hasattr(self, "right"):
+            self.right.pre(func)
+
     def validate(self, info=None):
         """
         Performs semantic validation of the Node.
@@ -51,43 +84,18 @@ class Node(object):
         "Validates the node"
         return True
 
-    def pre(self, func):
-        """
-        Performs a pre-order traversal of the
-        tree, and invokes a callback for each node.
-        """
-        func(self)
-        if hasattr(self, "left"):
-            self.left.pre(func)
-        if hasattr(self, "right"):
-            self.right.pre(func)
-
-    def __repr__(self):
-        """
-        Provides a representation that is useful to check the AST
-        but is not necesarily very usable as a user error message.
-        """
-        name = self.__class__.__name__
-        r = name
-        if hasattr(self, "type"):
-            r += " t:" + str(self.type)
-        if hasattr(self, "value"):
-            r += " v:" + str(self.value)
-        if hasattr(self, "left"):
-            r += " l:" + self.left.__class__.__name__
-        if hasattr(self, "right"):
-            r += " r:" + self.right.__class__.__name__
-        return r
-
-    def name(self):
-        "Provides human name with location"
-        cls = self.__class__.__name__
-        return "%s at %s" % (cls, self.position)
-
     def evaluate(self, pred, document):
         """
         Evaluates the AST tree against the document for the
-        given predicate.
+        given predicate. Returns either True or False
+        """
+        return bool(self.eval(pred, document, None))
+
+    def analyze(self, pred, document):
+        """
+        Evaluates the AST tree against the document for the
+        given predicate and provides a dictionary with detailed
+        information about the evaluate and failure reasons
         """
         info = {"failed":[], "literals": {}}
         res = bool(self.eval(pred, document, info))
@@ -311,6 +319,9 @@ class Literal(Node):
     def __init__(self, value):
         self.value = value
 
+    def name(self):
+        return "Literal %s at %s" % (self.value, self.position)
+
     def eval(self, pred, doc, info=None):
         # Use the predicate class to resolve the identifier
         v = pred.resolve_identifier(doc, self.value)
@@ -327,6 +338,9 @@ class Number(Node):
         except:
             self.value = value
 
+    def name(self):
+        return "Number %f at %s" % (self.value, self.position)
+
     def _validate(self, info):
         if not isinstance(self.value, float):
             errs = info["errors"]
@@ -342,6 +356,9 @@ class Constant(Node):
     "Used for true, false, null"
     def __init__(self, value):
         self.value = value
+
+    def name(self):
+        return "Constant %s at %s" % (self.value, self.position)
 
     def _validate(self, info):
         if self.value not in (True, False, None):
