@@ -21,7 +21,10 @@ class Node(object):
     "Root object in the AST tree"
     def __init__(self):
         # Set to true in our _validate method
-        self.valid = False
+        self.position = "line: ?, col: ?"
+
+    def set_position(self, line, col):
+        self.position = "line: %d, col %d" % (line, col)
 
     def validate(self, info=None):
         """
