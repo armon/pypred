@@ -4,6 +4,14 @@ Unit tests for the lexer
 import pytest
 from pypred import parser, ast
 
+class MockPred(object):
+    def resolve_identifier(self, doc, ident):
+        if ident in doc:
+            return doc[ident]
+        else:
+            return ast.Undefined()
+
+
 class TestAST(object):
     def ast(self, inp):
         lexer = parser.get_lexer()
@@ -84,4 +92,74 @@ class TestAST(object):
         valid, info = a.validate()
         assert not valid
         assert "Unknown compare" in info["errors"][0]
+
+    def test_logical_eval1(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('and', l, r)
+        res, info = a.analyze(MockPred(), {"l": True, "r": False})
+        assert not res
+        assert info["literals"]["l"] == True
+        assert info["literals"]["r"] == False
+        assert "Right hand side of AND operator at" in info["failed"][0]
+
+    def test_logical_eval2(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('and', l, r)
+        res, info = a.analyze(MockPred(), {"l": True, "r": True})
+        assert res
+        assert info["literals"]["l"] == True
+        assert info["literals"]["r"] == True
+
+    def test_logical_eval3(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('or', l, r)
+        res, info = a.analyze(MockPred(), {"l": False, "r": False})
+        assert not res
+        assert info["literals"]["l"] == False
+        assert info["literals"]["r"] == False
+        assert "Both sides of OR operator at" in info["failed"][0]
+
+    def test_logical_eval4(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('or', l, r)
+        res, info = a.analyze(MockPred(), {"l": False, "r": True})
+        assert res
+        assert info["literals"]["l"] == False
+        assert info["literals"]["r"] == True
+
+    def test_logical_eval5(self):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('or', l, r)
+        res, info = a.analyze(MockPred(), {"l": False})
+        assert not res
+        assert info["literals"]["l"] == False
+        assert info["literals"]["r"] == ast.Undefined()
+        assert "Both sides of OR operator" in info["failed"][0]
+
+    def test_logical_eval6(self):
+        "Short circuit logic"
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('or', l, r)
+        res, info = a.analyze(MockPred(), {"l": True})
+        assert res
+        assert info["literals"]["l"] == True
+        assert "r" not in info["literals"]
+
+    def test_logical_eval7(self):
+        "Short circuit logic"
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.LogicalOperator('and', l, r)
+        res, info = a.analyze(MockPred(), {"l": False})
+        assert not res
+        assert info["literals"]["l"] == False
+        assert "r" not in info["literals"]
+        assert "Left hand side" in info["failed"][0]
+
 

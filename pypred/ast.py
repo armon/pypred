@@ -161,7 +161,7 @@ class LogicalOperator(Node):
             return
 
         if self.type == "or":
-            err = "Boths sides of " + self.name() + " failed"
+            err = "Both sides of " + self.name() + " failed"
         else:
             err = "Right hand side of " + self.name() + " failed"
         info["failed"].append(err)
