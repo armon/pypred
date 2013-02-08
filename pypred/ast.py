@@ -3,6 +3,18 @@ This module provides the AST nodes that are used to
 represent and later, evaluate a predicate.
 """
 import re
+from functools import wraps
+
+
+# Helper decorator to provide eval information
+def eval_info(func):
+    @wraps
+    def wrapper(self, pred, doc, info=None):
+        res = func(pred, doc, info)
+        if not res and info:
+            info["failed"].append(repr(self))
+        return res
+    return wrapper
 
 
 class Node(object):
@@ -61,6 +73,19 @@ class Node(object):
             r += " r:" + self.right.__class__.__name__
         return r
 
+    def evaluate(self, pred, document):
+        """
+        Evaluates the AST tree against the document for the
+        given predicate.
+        """
+        info = {}
+        res = bool(self.eval(pred, document, info))
+        return res, info
+
+    def eval(self, pred, doc, info=None):
+        "Node-specific implementation"
+        return True
+
 
 class LogicalOperator(Node):
     "Used for the logical operators"
@@ -77,10 +102,32 @@ class LogicalOperator(Node):
             return False
         return True
 
+    @eval_info
+    def eval(self, pred, doc, info=None):
+        "Implement short-circuit logic"
+        if self.type == "and":
+            if not self.left.eval(pred, doc, info):
+                return False
+            if not self.right.eval(pred, doc, info):
+                return False
+            return True
+        else:
+            if self.left.eval(pred, doc, info):
+                return True
+            if self.right.eval(pred, doc, info):
+                return True
+            return False
+
+
 class NegateOperator(Node):
     "Used to negate a result"
     def __init__(self, expr):
         self.left = expr
+
+    @eval_info
+    def eval(self, pred, doc, info=None):
+        return not self.left.eval(pred, doc, info)
+
 
 class CompareOperator(Node):
     "Used for all the mathematical comparisons"
@@ -96,6 +143,37 @@ class CompareOperator(Node):
             return False
         return True
 
+    @eval_info
+    def eval(self, pred, doc, info=None):
+        left = self.left.eval(pred, doc, info)
+        right = self.right.eval(pred, doc, info)
+
+        # Check if this is an equality check
+        if self.type in ("=", "is"):
+            return left == right
+        elif self.type == "!=":
+            return left != right
+
+        # Compare operations against undefined or empty always fail
+        if isinstance(left, (Undefined, Empty)):
+            if info:
+                info["failed"].append("Comparison again undefined or empty")
+            return False
+        if isinstance(right, (Undefined, Empty)):
+            if info:
+                info["failed"].append("Comparison again undefined or empty")
+            return False
+
+        if self.type == ">=":
+            return left >= right
+        elif self.type == ">":
+            return left > right
+        elif self.type == "<=":
+            return left <= right
+        elif self.type == "<":
+            return left < right
+
+
 class ContainsOperator(Node):
     "Used for the 'contains' operator"
     def __init__(self, left, right):
@@ -109,6 +187,17 @@ class ContainsOperator(Node):
             return False
         return True
 
+    def eval(self, pred, doc, info=None):
+        left = self.left.eval(pred, doc, info)
+        right = self.right.eval(pred, doc, info)
+        if right in left:
+            return True
+        else:
+            if info:
+                info["failed"].append("Right side: %s not in left side: %s" % (repr(right), repr(left)))
+            return False
+
+
 class MatchOperator(Node):
     "Used for the 'matches' operator"
     def __init__(self, left, right):
@@ -121,6 +210,21 @@ class MatchOperator(Node):
             errs.append("Match operator must take a regex! Got: %s" % repr(self.right))
             return False
         return True
+
+    def eval(self, pred, doc, info=None):
+        left = self.left.eval(pred, doc, info)
+        right = self.right.eval(pred, doc, info)
+        if not isinstance(left, isinstance(str)):
+            if info: info["failed"].append("Regex %s input %s is not a string!" % (self.right.value, repr(left)))
+            return False
+        match = right.search(left)
+        if match is not None:
+            return True
+        else:
+            if info:
+                info["failed"].append("Regex %s does not match %s" % (repr(self.right.value), repr(left)))
+            return False
+
 
 class Regex(Node):
     "Regular expression literal"
@@ -149,10 +253,19 @@ class Regex(Node):
 
         return True
 
+    def eval(self, pred, doc, info=None):
+        return self.re
+
+
 class Literal(Node):
     "String literal"
     def __init__(self, value):
         self.value = value
+
+    def eval(self, pred, doc, info=None):
+        # Use the predicate class to resolve the identifier
+        return pred.resolve_identifier(doc, self.value)
+
 
 class Number(Node):
     "Numeric literal"
@@ -169,6 +282,10 @@ class Number(Node):
             return False
         return True
 
+    def eval(self, pred, doc, info=None):
+        return self.value
+
+
 class Constant(Node):
     "Used for true, false, null"
     def __init__(self, value):
@@ -181,13 +298,40 @@ class Constant(Node):
             return False
         return True
 
+    def eval(self, pred, doc, info=None):
+        return self.value
+
+
 class Undefined(Node):
     "Represents a non-defined object"
     def __init__(self):
         return
 
+    def __nonzero__(self):
+        "Acts like False"
+        return False
+
+    def __eq__(self, other):
+        "Only equal to undefined"
+        return isinstance(other, Undefined)
+
+    def eval(self, pred, doc, info=None):
+        return False
+
+
 class Empty(Node):
     "Represents the null set"
     def __init__(self):
         return
+
+    def __nonzero__(self):
+        "Acts like False"
+        return False
+
+    def __eq__(self, other):
+        "Only equal to things of zero length"
+        return len(other) == 0
+
+    def eval(self, pred, doc, info=None):
+        return False
 
