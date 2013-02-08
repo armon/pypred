@@ -189,10 +189,12 @@ def p_factor_parens(p):
 
 def p_error(p):
     "Handles errors"
-    err = ("Syntax error at token", p.type, p.value)
-    print err
-    p.parser.errors.append(err)
-    p.parser.errok()
+    if p is None:
+        raise SyntaxError("Unexpected end of predicate!")
+    else:
+        err = ("Syntax error at token", p.type, p.value)
+        p.parser.errors.append(err)
+        p.parser.errok()
 
 
 def get_parser(debug=0):
