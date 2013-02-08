@@ -176,4 +176,25 @@ class TestAST(object):
         assert not res
         assert info["literals"]["l"] == True
 
+    @pytest.mark.parametrize(("type",), [
+        (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
+    def test_compare(self, type):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.CompareOperator(type, l, r)
+        d = {"l": 1, "r": 5}
+        res, info = a.analyze(MockPred(), d)
+
+        # Determine the expected result
+        if type == "=":
+            s = '%d %s %d' % (d["l"], "==", d["r"])
+        else:
+            s = '%d %s %d' % (d["l"], type, d["r"])
+        expected = eval(s)
+
+        assert res == expected
+        if not res:
+            assert ("%s comparison at" % type.upper()) in info["failed"][0]
+        assert info["literals"]["l"] == d["l"]
+        assert info["literals"]["r"] == d["r"]
 
