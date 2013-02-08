@@ -6,14 +6,14 @@ import re
 from functools import wraps
 
 
-# Helper decorator to provide eval information
-def eval_info(func):
+def failure_info(func):
+    "Helper to provide error information on failure"
     @wraps(func)
     def wrapper(self, pred, doc, info=None):
-        res = func(self, pred, doc, info)
-        if not res and info:
-            info["failed"].append(repr(self))
-        return res
+        r = func(self, pred, doc, info)
+        if not r and info:
+            self.failure_info(pred, doc, info)
+        return r
     return wrapper
 
 
@@ -44,8 +44,7 @@ class Node(object):
             sub_v, _ = self.right.validate(info)
             v &= sub_v
 
-        self.valid = self._validate(info)
-        v &= self.valid
+        v &= self._validate(info)
         return (v, info)
 
     def _validate(self, info):
@@ -64,6 +63,10 @@ class Node(object):
             self.right.pre(func)
 
     def __repr__(self):
+        """
+        Provides a representation that is useful to check the AST
+        but is not necesarily very usable as a user error message.
+        """
         name = self.__class__.__name__
         r = name
         if hasattr(self, "type"):
@@ -76,12 +79,17 @@ class Node(object):
             r += " r:" + self.right.__class__.__name__
         return r
 
+    def name(self):
+        "Provides human name with location"
+        cls = self.__class__.__name__
+        return "%s at %s" % (cls, self.position)
+
     def evaluate(self, pred, document):
         """
         Evaluates the AST tree against the document for the
         given predicate.
         """
-        info = {"failed":[]}
+        info = {"failed":[], "literals": {}}
         res = bool(self.eval(pred, document, info))
         return res, info
 
@@ -97,6 +105,9 @@ class LogicalOperator(Node):
         self.left = left
         self.right = right
 
+    def name(self):
+        return "%s operator at %s" % (self.type.upper(), self.position)
+
     def _validate(self, info):
         "Validates the node"
         if self.type not in ("and", "or"):
@@ -105,7 +116,7 @@ class LogicalOperator(Node):
             return False
         return True
 
-    @eval_info
+    @failure_info
     def eval(self, pred, doc, info=None):
         "Implement short-circuit logic"
         if self.type == "and":
@@ -121,13 +132,25 @@ class LogicalOperator(Node):
                 return True
             return False
 
+    def failure_info(self, pred, doc, info):
+        l = self.left.eval(pred, doc, info)
+        if self.type == "and" and not l:
+            err = "Left hand side of " + self.name() + " failed"
+            info["failed"].append(err)
+            return
+
+        if self.type == "or":
+            err = "Boths sides of " + self.name() + " failed"
+        else:
+            err = "Right hand side of " + self.name() + " failed"
+        info["failed"].append(err)
+
 
 class NegateOperator(Node):
     "Used to negate a result"
     def __init__(self, expr):
         self.left = expr
 
-    @eval_info
     def eval(self, pred, doc, info=None):
         return not self.left.eval(pred, doc, info)
 
@@ -139,6 +162,9 @@ class CompareOperator(Node):
         self.left = left
         self.right = right
 
+    def name(self):
+        return "%s comparison at %s" % (self.type.upper(), self.position)
+
     def _validate(self, info):
         if self.type not in (">=", ">", "<", "<=", "=", "!=", "is"):
             errs = info["errors"]
@@ -146,7 +172,7 @@ class CompareOperator(Node):
             return False
         return True
 
-    @eval_info
+    @failure_info
     def eval(self, pred, doc, info=None):
         left = self.left.eval(pred, doc, info)
         right = self.right.eval(pred, doc, info)
@@ -159,12 +185,8 @@ class CompareOperator(Node):
 
         # Compare operations against undefined or empty always fail
         if isinstance(left, (Undefined, Empty)):
-            if info:
-                info["failed"].append("Comparison again undefined or empty")
             return False
         if isinstance(right, (Undefined, Empty)):
-            if info:
-                info["failed"].append("Comparison again undefined or empty")
             return False
 
         if self.type == ">=":
@@ -175,6 +197,23 @@ class CompareOperator(Node):
             return left <= right
         elif self.type == "<":
             return left < right
+
+    def failure_info(self, pred, doc, info):
+        l = self.left.eval(pred, doc, info)
+        r = self.right.eval(pred, doc, info)
+
+        # Check if it was a failure due to undefined or empty
+        if self.type not in ('=', '!=', 'is') and \
+                isinstance(l, (Undefined, Empty)) or \
+                isinstance(r, (Undefined, Empty)):
+            err = self.name() + " failed with Undefined or Empty operand"
+            info["failed"].append(err)
+            return
+
+        # Comparison failure
+        err = self.name() + " failed, left: %s, right: %s" % \
+                (repr(l), repr(r))
+        info["failed"].append(err)
 
 
 class ContainsOperator(Node):
@@ -190,15 +229,19 @@ class ContainsOperator(Node):
             return False
         return True
 
+    @failure_info
     def eval(self, pred, doc, info=None):
         left = self.left.eval(pred, doc, info)
         right = self.right.eval(pred, doc, info)
-        if right in left:
-            return True
-        else:
-            if info:
-                info["failed"].append("Right side: %s not in left side: %s" % (repr(right), repr(left)))
-            return False
+        return right in left
+
+    def failure_info(self, pred, doc, info):
+        left = self.left.eval(pred, doc, info)
+        right = self.right.eval(pred, doc, info)
+
+        err = "Right side: %s not in left side: %s for %s" \
+                % (repr(right), repr(left), self.name())
+        info["failed"].append(err)
 
 
 class MatchOperator(Node):
@@ -214,19 +257,22 @@ class MatchOperator(Node):
             return False
         return True
 
+    @failure_info
     def eval(self, pred, doc, info=None):
         left = self.left.eval(pred, doc, info)
-        right = self.right.eval(pred, doc, info)
         if not isinstance(left, str):
-            if info: info["failed"].append("Regex %s input %s is not a string!" % (self.right.value, repr(left)))
             return False
+
+        right = self.right.eval(pred, doc, info)
         match = right.search(left)
-        if match is not None:
-            return True
-        else:
-            if info:
-                info["failed"].append("Regex %s does not match %s" % (repr(self.right.value), repr(left)))
-            return False
+        return match is not None
+
+    def failure_info(self, pred, doc, info):
+        left = self.left.eval(pred, doc, info)
+        re_str = self.right.value
+        err = "Regex %s does not match %s for %s" % \
+                (repr(re_str), repr(left), self.name())
+        info["failed"].append(err)
 
 
 class Regex(Node):
@@ -267,7 +313,10 @@ class Literal(Node):
 
     def eval(self, pred, doc, info=None):
         # Use the predicate class to resolve the identifier
-        return pred.resolve_identifier(doc, self.value)
+        v = pred.resolve_identifier(doc, self.value)
+        if info:
+            info["literals"][self.value] = v
+        return v
 
 
 class Number(Node):
