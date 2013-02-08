@@ -402,7 +402,7 @@ class Undefined(Node):
 
     def __eq__(self, other):
         "Only equal to undefined"
-        return isinstance(other, Undefined)
+        return isinstance(other, (Undefined, Empty))
 
     def __ne__(self, other):
         """
@@ -428,6 +428,10 @@ class Empty(Node):
 
     def __eq__(self, other):
         "Only equal to things of zero length"
+        if isinstance(other, (Empty, Undefined)):
+            return True
+        if not hasattr(other, "__len__"):
+            return False
         return len(other) == 0
 
     def eval(self, pred, doc, info=None):

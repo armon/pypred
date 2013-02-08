@@ -217,3 +217,22 @@ class TestAST(object):
         assert info["literals"]["l"] == d["l"]
         assert info["literals"]["r"] == ast.Undefined()
 
+    @pytest.mark.parametrize(("type",), [
+        (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
+    def test_compare_empty(self, type):
+        l = ast.Literal("l")
+        r = ast.Literal("r")
+        a = ast.CompareOperator(type, l, r)
+        d = {"l": 1, "r": ast.Empty()}
+        res, info = a.analyze(MockPred(), d)
+
+        # Determine the expected result
+        if type == "!=":
+            assert res
+        else:
+            assert not res
+        if not res:
+            assert ("%s comparison at" % type.upper()) in info["failed"][0]
+        assert info["literals"]["l"] == d["l"]
+        assert info["literals"]["r"] == ast.Empty()
+
