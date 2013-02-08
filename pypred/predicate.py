@@ -31,6 +31,9 @@ class Predicate(object):
             raise TypeError("Predicate must be a string!")
         self.predicate = predicate
 
+        # Set of custom resolvers
+        self.resolvers = {}
+
         # Setup the lexer
         lexer = get_lexer()
         self.lexer_errors = lexer.errors
@@ -126,6 +129,15 @@ class Predicate(object):
             raise InvalidPredicate
         return self.ast.analyze(self, document)
 
+    def set_resolver(self, identifier, relv):
+        """
+        Sets a custom resolver. If resolve_identifier cannot
+        find the identifier in the document, and there is a matching
+        resolver, that resolver will be used. If the resolver is
+        callable, it will be invoked, otherwise it is returned as is.
+        """
+        self.resolvers[identifier] = relv
+
     def resolve_identifier(self, document, identifier):
         """
         Resolves string literal identifiers in the scope of
@@ -154,6 +166,14 @@ class Predicate(object):
                     break
             if found:
                 return root
+
+        # Check if there is a resolver
+        if identifier in self.resolvers:
+            relv = self.resolvers[identifier]
+            if callable(relv):
+                return relv()
+            else:
+                return relv
 
         # Return the undefined node if all else fails
         return ast.Undefined()
