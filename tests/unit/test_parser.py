@@ -68,3 +68,12 @@ class TestParser(object):
             "Literal v:test"
         ])
 
+    def test_logical_precedence(self):
+        inp = "true or false and false"
+        self.assert_nodes(inp, [
+"LogicalOperator t:or l:Constant r:LogicalOperator",
+    "Constant v:True",
+    "LogicalOperator t:and l:Constant r:Constant",
+        "Constant v:False",
+        "Constant v:False",
+])
