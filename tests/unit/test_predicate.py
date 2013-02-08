@@ -65,3 +65,17 @@ class TestPredicate(object):
         assert p.resolve_identifier({}, "'name'") == "name"
         assert p.resolve_identifier({}, "\"name\"") == "name"
 
+    def test_resolve_custom(self):
+        import random
+        p = Predicate("name is 'Jack' and friend is 'Jill'")
+        p.set_resolver("random", random.random)
+        r1 = p.resolve_identifier({}, "random")
+        r2 = p.resolve_identifier({}, "random")
+        assert r1 != r2
+
+    def test_resolve_custom_fixed(self):
+        p = Predicate("name is 'Jack' and friend is 'Jill'")
+        p.set_resolver("answer", 42)
+        r1 = p.resolve_identifier({}, "answer")
+        assert r1 == 42
+
