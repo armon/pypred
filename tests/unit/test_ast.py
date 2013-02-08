@@ -45,7 +45,7 @@ class TestAST(object):
         a = ast.Regex("(abc")
         valid, info = a.validate()
         assert not valid
-        assert "Regex compilation failed" in info["errors"][0]
+        assert "Compilation failed" in info["errors"][0]
         assert "(abc" in info["regex"]
         assert info["regex"]["(abc"] == "unbalanced parenthesis"
 
@@ -53,7 +53,7 @@ class TestAST(object):
         a = self.ast("foo matches '(abc'")
         valid, info = a.validate()
         assert not valid
-        assert "Regex compilation failed" in info["errors"][0]
+        assert "Compilation failed" in info["errors"][0]
         assert "(abc" in info["regex"]
         assert info["regex"]["(abc"] == "unbalanced parenthesis"
 

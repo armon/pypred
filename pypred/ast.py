@@ -332,7 +332,7 @@ class Regex(Node):
             self.re = re.compile(self.value)
         except Exception, e:
             errs = info["errors"]
-            errs.append("Regex compilation failed")
+            errs.append("Compilation failed for %s" % self.name())
             regexes = info["regex"]
             regexes[self.value] = str(e)
             return False
