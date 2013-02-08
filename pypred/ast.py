@@ -127,14 +127,14 @@ class Regex(Node):
     def __init__(self, value):
         # Unpack a Node object if we are given one
         if isinstance(value, Node):
-            self.value = value.value
+            self.value = value.value.strip("'\"")
         else:
             self.value = value
 
     def _validate(self, info):
         if not isinstance(self.value, str):
             errs = info["errors"]
-            errs.append("Regex must be a string! Got: " % repr(self.value))
+            errs.append("Regex must be a string! Got: %s" % repr(self.value))
             return False
 
         # Try to compile
@@ -144,7 +144,7 @@ class Regex(Node):
             errs = info["errors"]
             errs.append("Regex compilation failed")
             regexes = info["regex"]
-            regexes[self.value] = repr(e)
+            regexes[self.value] = str(e)
             return False
 
         return True

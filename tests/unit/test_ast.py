@@ -21,3 +21,31 @@ class TestAST(object):
         assert not valid
         assert "Failed to convert" in info["errors"][0]
 
+    def test_bad_constant(self):
+        a = ast.Constant(42)
+        valid, info = a.validate()
+        assert not valid
+        assert "Invalid Constant" in info["errors"][0]
+
+    def test_bad_regex_type(self):
+        a = ast.Regex(42)
+        valid, info = a.validate()
+        assert not valid
+        assert "Regex must be a string" in info["errors"][0]
+
+    def test_bad_regex(self):
+        a = ast.Regex("(abc")
+        valid, info = a.validate()
+        assert not valid
+        assert "Regex compilation failed" in info["errors"][0]
+        assert "(abc" in info["regex"]
+        assert info["regex"]["(abc"] == "unbalanced parenthesis"
+
+    def test_bad_regex_inp(self):
+        a = self.ast("foo matches '(abc'")
+        valid, info = a.validate()
+        assert not valid
+        assert "Regex compilation failed" in info["errors"][0]
+        assert "(abc" in info["regex"]
+        assert info["regex"]["(abc"] == "unbalanced parenthesis"
+
