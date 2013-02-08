@@ -30,7 +30,7 @@ Grammer Examples
 To demonstate the capabilities of the pypred grammer, the following
 examples are provided.
 
-    name is Jack and friend_name is Jill
+    name is 'Jack' and friend_name is 'Jill'
 
 This predicate checks that the input document has a field name equal to
 "Jack", and a field friend\_name equal to "Jill"
@@ -67,4 +67,11 @@ The main interface for it is:
 * Predicate.analyze(document) : Evaluates the given document against the predicate,
   returns the results, as well as a dictionary that includes more information about
   the evaluation, including the failure reasons
+
+One of the critical aspects of evaluating a predicate is the resolution of
+literals. When the AST needs a value to substitute a variable, it calls the
+`resolve_identifier` method of the Predicate. The default behavior is flexible,
+and support string literals, dictionary lookups, nested dictionaries, and
+call back resolution via `set_resolver`. However, if a client wants to customize
+the resolution of identifier, they can simply override this method.
 
