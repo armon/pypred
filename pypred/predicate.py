@@ -66,11 +66,17 @@ class Predicate(object):
         info["errors"] = self.lexer_errors + self.parser_errors + list(info["errors"])
         return info
 
+    def description(self):
+        "Provides a tree like human readable description of the predicate"
+        if not self.is_valid():
+            raise InvalidPredicate
+        return self.ast.description()
+
     def evaluate(self, document):
         "Evaluates the predicate against the document"
-        # Use analyze and throw away the info
-        result, _ = self.analyze(document)
-        return result
+        if not self.is_valid():
+            raise InvalidPredicate
+        return self.ast.evaluate(self, document)
 
     def analyze(self, document):
         """
@@ -80,8 +86,7 @@ class Predicate(object):
         """
         if not self.is_valid():
             raise InvalidPredicate
-
-        return self.ast.evaluate(self, document)
+        return self.ast.analyze(self, document)
 
     def resolve_identifier(self, document, identifier):
         """
