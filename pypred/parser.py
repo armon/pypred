@@ -192,14 +192,18 @@ def p_error(p):
     if p is None:
         raise SyntaxError("Unexpected end of predicate!")
     else:
-        err = ("Syntax error at token", p.type, p.value)
-        p.parser.errors.append(err)
-        p.parser.errok()
+        err = ("Syntax error at token", p.type, p.value, p.lexpos, p.lineno)
+        parser = p.lexer.parser
+        parser.errors.append(err)
+        parser.errok()
 
 
-def get_parser(debug=0):
+def get_parser(lexer=None, debug=0):
     "Returns a new instance of the parser"
     p = yacc.yacc(debug=debug)
     p.errors = []
+    if lexer:
+        lexer.parser = p
+        p.lexer = lexer
     return p
 

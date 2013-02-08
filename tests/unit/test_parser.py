@@ -124,3 +124,12 @@ class TestParser(object):
         with pytest.raises(SyntaxError):
             p.parse(inp, lexer=lexer)
 
+    def test_error_expr(self):
+        inp = "a > 1 b > 2"
+        lexer = parser.get_lexer()
+        p = parser.get_parser()
+        lexer.parser = p
+        res = p.parse(inp, lexer=lexer)
+        assert isinstance(res, ast.CompareOperator)
+        assert len(p.errors) == 3
+
