@@ -77,3 +77,12 @@ class TestParser(object):
         "Constant v:False",
         "Constant v:False",
 ])
+
+    def test_logical_not_precedence(self):
+        inp = "false or not true"
+        self.assert_nodes(inp, [
+"LogicalOperator t:or l:Constant r:NegateOperator",
+    "Constant v:False",
+    "NegateOperator l:Constant",
+        "Constant v:True",
+])
