@@ -75,3 +75,39 @@ and support string literals, dictionary lookups, nested dictionaries, and
 call back resolution via `set_resolver`. However, if a client wants to customize
 the resolution of identifier, they can simply override this method.
 
+Human Readable Outputs
+======================
+
+PyPred tries to make it possible to provide human readable output of
+both predicates as well as any error messages that are encountered.
+Here is an example of a human readable description of:
+
+    p = Predicate('server matches "east-web-([\d]+)" and errors contains "CPU load" and environment != test')
+    print p.description()
+
+    AND operator at line: 1, col 34
+        MatchOperator at line: 1, col 7
+            Literal server at line: 1, col 0
+            Regex 'east-web-([\\d]+)' at line: 1, col 15
+        AND operator at line: 1, col 65
+            ContainsOperator at line: 1, col 45
+                Literal errors at line: 1, col 38
+                Literal "CPU load" at line: 1, col 54
+            != comparison at line: 1, col 81
+                Literal environment at line: 1, col 69
+                Literal test at line: 1, col 84
+
+Here is an example of the output during a failed evaluation:
+
+    p = Predicate('server matches "east-web-([\d]+)" and errors contains "CPU load" and environment != test')
+    res, info = p.analyze({'server': 'east-web-001', 'errors': [], 'environment': 'prod'})
+    assert res == False
+    pprint.pprint(info)
+
+    {'failed': ["Right side: 'CPU load' not in left side: [] for ContainsOperator at line: 1, col 45",
+                'Left hand side of AND operator at line: 1, col 65 failed',
+                'Right hand side of AND operator at line: 1, col 34 failed'],
+     'literals': {'"CPU load"': 'CPU load',
+                  'errors': [],
+                  'server': 'east-web-001'}}
+
