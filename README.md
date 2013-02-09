@@ -60,7 +60,7 @@ The main interface for it is:
 
 * Predicate.is\_valid() : Returns if the predicate is valid
 
-* Predicate.errors(): If not valid, returns a list of tokeniztion, syntax, and semantic errors
+* Predicate.errors(): If not valid, returns a list of tokenization, syntax, and semantic errors
 
 * Predicate.evaluate(document) : Evaluates the given document against the predicate
 
