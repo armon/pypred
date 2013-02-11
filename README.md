@@ -7,10 +7,10 @@ then evaluates. The PyPred provides simple APIs to do the evaluation
 is most sitations, but allows for customized evaluation techniques for
 more complex situations.
 
-Grammer
+Grammar
 =======
 
-The grammer that PyPred understands is fairly limited, and is restricted
+The grammar that PyPred understands is fairly limited, and is restricted
 to boolean logic.
 
 It supports the following:
@@ -24,10 +24,10 @@ It supports the following:
 * Numeric literals
 * Constants true, false, undefined, null, empty
 
-Grammer Examples
+Grammar Examples
 ================
 
-To demonstate the capabilities of the pypred grammer, the following
+To demonstate the capabilities of the pypred grammar, the following
 examples are provided.
 
     name is 'Jack' and friend_name is 'Jill'
