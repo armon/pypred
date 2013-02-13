@@ -354,8 +354,16 @@ class Literal(Node):
         return "Literal %s at %s" % (self.value, self.position)
 
     def eval(self, pred, doc, info=None):
+        # If we are analyzing, we have the cached value of the literal,
+        # we re-use it so that non-deterministic resolution doesn't
+        # cause strange errors.
+        if info and self.value in info["literals"]:
+            return info["literals"][self.value]
+
         # Use the predicate class to resolve the identifier
         v = pred.resolve_identifier(doc, self.value)
+
+        # Cache the result
         if info:
             info["literals"][self.value] = v
         return v
