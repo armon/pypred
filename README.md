@@ -1,4 +1,4 @@
-PyPred
+PyPred [![Build Status](https://travis-ci.org/armon/pypred.png)](https://travis-ci.org/armon/pypred)
 ======
 
 PyPred is a package to do predicate evaluation in Python. It uses a
