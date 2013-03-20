@@ -1,11 +1,8 @@
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
-try:
-    from parser import get_lexer, get_parser
-    import ast
-    from predicate import Predicate, InvalidPredicate
-    __all__ = ["get_lexer", "get_parser", "ast", "Predicate", "InvalidPredicate"]
-except ImportError:
-    print "Missing dependencies!"
-    __all__ = []
+from parser import get_lexer, get_parser
+import ast
+from predicate import Predicate, InvalidPredicate
+from set import PredicateSet
+__all__ = ["get_lexer", "get_parser", "ast", "Predicate", "InvalidPredicate"]
 

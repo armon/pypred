@@ -1,5 +1,5 @@
 from setuptools import setup
-import pypred
+__version__ = "0.2.0"
 
 # Get the long description by reading the README
 try:
@@ -9,7 +9,7 @@ except:
 
 # Create the actual setup method
 setup(name='pypred',
-      version=pypred.__version__,
+      version=__version__,
       description='A Python library for simple evaluation of natural language predicates',
       long_description=readme_content,
       author='Armon Dadgar',
