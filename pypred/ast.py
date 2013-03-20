@@ -500,10 +500,11 @@ class Branch(Node):
         res = self.expr.eval(pred, doc, info)
 
         # Branch on the expression
-        if res:
+        if res and self.left:
             return self.left.eval(pred, doc, info)
-        else:
+        elif self.right:
             return self.right.eval(pred, doc, info)
+        return False
 
     def failure_info(self, pred, doc, info):
         res = self.expr.eval(pred, doc, info)
