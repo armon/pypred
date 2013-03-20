@@ -461,3 +461,56 @@ class Empty(Node):
     def eval(self, pred, doc, info=None):
         return self
 
+
+class PushResults(Node):
+    "Special node class used to push results for PredicateSets"
+    def __init__(self, predicates):
+        self.predicates = predicates
+
+    def name(self):
+        "Provides human name of the matching predicates"
+        preds = " , ".join([p.predicate for p in self.predicates])
+        return "Push matching predicates (%s)" % preds
+
+    def eval(self, pred, doc, info=None):
+        # Push the matching predicates into the result
+        pred.push_matches(self.predicates)
+        return True
+
+
+class Branch(Node):
+    """
+    Special node class used for Predicate Sets.
+    The branch node allows for an AST node to be evaluated,
+    and if True to take the left branch, otherwise to evaluate
+    the right branch. This allows for a single evaluation
+    of a term to prune other unnecessary checks.
+    """
+    def __init__(self, expr, left, right):
+        self.expr = expr
+        self.left = left
+        self.right = right
+
+    def name(self):
+        return "Branch on %s" % self.expr.name()
+
+    @failure_info
+    def eval(self, pred, doc, info=None):
+        # Evaluate the expression first
+        res = self.expr.eval(pred, doc, info)
+
+        # Branch on the expression
+        if res:
+            return self.left.eval(pred, doc, info)
+        else:
+            return self.right.eval(pred, doc, info)
+
+    def failure_info(self, pred, doc, info):
+        res = self.expr.eval(pred, doc, info)
+        if res:
+            err = "Left hand side (True) of " + self.name() + " failed"
+        else:
+            err = "Right hand side (False) of " + self.name() + " failed"
+        info["failed"].append(err)
+        return
+
