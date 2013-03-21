@@ -318,4 +318,31 @@ class TestAST(object):
         assert res
         assert info["literals"]["l"] == "abcd"
 
+    def test_push(self):
+        p = ast.PushResults([True, False])
+        class TestSet(object):
+            def __init__(self):
+                self.res = []
+            def push_matches(self, matches):
+                self.res.extend(matches)
+
+        testset = TestSet()
+        assert p.eval(testset, {}, None)
+        assert testset.res == [True, False]
+
+    def test_branch(self):
+        l = ast.Literal('a')
+        r = ast.Literal('b')
+        check = ast.CompareOperator('>', l, r)
+        true = ast.Constant(True)
+        false = ast.Constant(False)
+        b = ast.Branch(check, true, false)
+
+        assert b.eval(MockPred(), {'a': 2, 'b':1})
+
+        res, info = b.analyze(MockPred(), {'a': 1, 'b':2})
+        assert not res
+        assert info["literals"]["a"] == 1
+        assert info["literals"]["b"] == 2
+        assert info["failed"][-1].startswith("Right hand side")
 
