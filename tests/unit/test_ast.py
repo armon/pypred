@@ -346,3 +346,19 @@ class TestAST(object):
         assert info["literals"]["b"] == 2
         assert info["failed"][-1].startswith("Right hand side")
 
+    def test_iterall_false(self):
+        c1 = ast.Constant(False)
+        c2 = ast.Constant(False)
+        c3 = ast.Constant(False)
+        c4 = ast.Constant(False)
+        n = ast.IterAll([c1,c2,c3,c4])
+        assert n.eval(MockPred(), {}) == False
+
+    def test_iterall_true(self):
+        c1 = ast.Constant(False)
+        c2 = ast.Constant(False)
+        c3 = ast.Constant(False)
+        c4 = ast.Constant(True)
+        n = ast.IterAll([c1,c2,c3,c4])
+        assert n.eval(MockPred(), {}) == True
+
