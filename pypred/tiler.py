@@ -1,0 +1,107 @@
+"""
+This module helps with 'tiling' which is the process
+of pattern matching against AST trees. This can be
+used either for optimizations by re-writing the
+AST tree, or for things like expression counting and
+merging.
+"""
+
+class Pattern(object):
+    "Base class for patterns"
+    def matches(self, node):
+        "Returns if the current node matches the pattern"
+        return False
+
+class SimplePattern(object):
+    "Implements a simple DSL for patterns"
+    def __init__(self, node_p, left_p=None, right_p=None):
+        """
+        Initializes a pattern that checks against the
+        given node, and optionally against the left and right
+        nodes as well. The base Pattern implementation understands
+        patters in the form of:
+        * types:ASTType1,ASTType2
+        * op:NodeType
+        * AND
+
+        As an example, a pattern like:
+        types:CompareOperator AND op:=
+
+        Will match a comparison operator which checks for equality.
+        """
+        self.node_p = node_p
+        self.left_p = left_p
+        self.right_p = right_p
+
+    def matches(self, node):
+        "Returns if the current node matches the pattern"
+        if not self._check_pattern(self.node_p, node):
+            return False
+        if self.left_p and not self._check_pattern(self.left_p, node.left):
+            return False
+        if self.right_p and not self._check_pattern(self.right_p, node.right):
+            return False
+        return True
+
+    @classmethod
+    def _check_pattern(cls, pattern, node):
+        clauses = pattern.split(" AND ")
+        for clause in clauses:
+            # Check the node type
+            if clause.startswith("types:"):
+                types = clause[6:].split(",")
+                if cls.node_type(node) not in types:
+                    return False
+
+            # Check the node op
+            elif clause.startswith("op:"):
+                op = clause[3:]
+                if cls.node_op(node) != op:
+                    return False
+
+            else:
+                raise Exception("Invalid pattern clause %s" % clause)
+        return True
+
+    @classmethod
+    def node_type(cls, node):
+        return node.__class__.__name__
+
+    @classmethod
+    def node_op(cls, node):
+        if hasattr(node, "type"):
+            return node.type
+        else:
+            return None
+
+
+def tile(ast, patterns, func):
+    """
+    Tiles over the given AST tree with a list of patterns,
+    applying each. When a given pattern matches, the callback
+    function is invoked with the pattern, and current node.
+    The function can return either None or a new AST node
+    which replaces the node that was passed in.
+
+    Returns the new AST tree.
+    """
+    for p in patterns:
+        if p.matches(ast):
+            result = func(p, ast)
+            if result:
+                ast=result
+
+    # Tile the left
+    if hasattr(ast, "left"):
+        result = tile(ast.left, patterns, func)
+        if result:
+            ast.left=result
+
+    # Tile the right side
+    if hasattr(ast, "right"):
+        result = tile(ast.right, patterns, func)
+        if result:
+            ast.right=result
+
+    return ast
+
