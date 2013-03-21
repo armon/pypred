@@ -468,6 +468,9 @@ class PushResult(Node):
         self.pred = predicate
         self.left = ast
 
+    def name(self):
+        return "PushResult of '%s'" % self.pred.predicate
+
     def eval(self, pred, doc, info=None):
         if self.left.eval(pred, doc, info):
             pred.push_match(self.pred)
@@ -489,6 +492,21 @@ class Branch(Node):
 
     def name(self):
         return "Branch on %s" % self.expr.name()
+
+    def description(self, buf=None, depth=0):
+        """
+        Provides a human readable tree description
+        """
+        if not buf:
+            buf = ""
+        pad = depth * "\t"
+        buf += pad + self.name() + "\n"
+        buf = self.expr.description(buf, depth+1)
+        if hasattr(self, "left"):
+            buf = self.left.description(buf, depth+1)
+        if hasattr(self, "right"):
+            buf = self.right.description(buf, depth+1)
+        return buf
 
     @failure_info
     def eval(self, pred, doc, info=None):
