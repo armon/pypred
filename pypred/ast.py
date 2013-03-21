@@ -462,19 +462,15 @@ class Empty(Node):
         return self
 
 
-class PushResults(Node):
+class PushResult(Node):
     "Special node class used to push results for PredicateSets"
-    def __init__(self, predicates):
-        self.predicates = predicates
-
-    def name(self):
-        "Provides human name of the matching predicates"
-        preds = " , ".join([p.predicate for p in self.predicates])
-        return "Push matching predicates (%s)" % preds
+    def __init__(self, predicate, ast):
+        self.pred = predicate
+        self.left = ast
 
     def eval(self, pred, doc, info=None):
-        # Push the matching predicates into the result
-        pred.push_matches(self.predicates)
+        if self.left.eval(pred, doc, info):
+            pred.push_match(self.pred)
         return True
 
 

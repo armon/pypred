@@ -319,16 +319,16 @@ class TestAST(object):
         assert info["literals"]["l"] == "abcd"
 
     def test_push(self):
-        p = ast.PushResults([True, False])
+        p = ast.PushResult(True, ast.Constant(True))
         class TestSet(object):
             def __init__(self):
                 self.res = []
-            def push_matches(self, matches):
-                self.res.extend(matches)
+            def push_match(self, m):
+                self.res.append(m)
 
         testset = TestSet()
         assert p.eval(testset, {}, None)
-        assert testset.res == [True, False]
+        assert testset.res == [True]
 
     def test_branch(self):
         l = ast.Literal('a')
