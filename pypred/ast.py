@@ -515,7 +515,7 @@ class Branch(Node):
         info["failed"].append(err)
 
 
-class IterAll(Node):
+class Both(Node):
     """
     Special node class used for merging predicates.
     This node allows for all possible sub-trees to
@@ -524,36 +524,21 @@ class IterAll(Node):
     It is used instead of OR trees since it does not
     short-circuit the evaluation.
     """
-    def __init__(self, children):
-        self.children = children
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
 
     def name(self):
         "Provides human name with location"
         return self.__class__.__name__
 
-    def description(self, buf=None, depth=0):
-        """
-        Provides a human readable tree description
-        """
-        if not buf:
-            buf = ""
-        pad = depth * "\t"
-        buf += pad + self.name() + "\n"
-        for c in self.children:
-            buf = c.description(buf, depth+1)
-        return buf
-
     @failure_info
     def eval(self, pred, doc, info=None):
-        any_valid = False
-        for c in self.children:
-            res = c.eval(pred, doc, info)
-            if res:
-                any_valid = True
-
-        return any_valid
+        any_true = self.left.eval(pred, doc, info) or \
+                self.right.eval(pred, doc, info)
+        return any_true
 
     def failure_info(self, pred, doc, info):
-        err = "All children evaluated to false"
+        err = "Both sides of " + self.name() + " failed"
         info["failed"].append(err)
 
