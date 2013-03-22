@@ -362,9 +362,14 @@ class Literal(Node):
     def name(self):
         return "Literal %s at %s" % (self.value, self.position)
 
-    def set_static_value(self, value):
+    def static_resolve(self, pred):
+        "Uses the predicate to perform a static resolution"
+        s = pred.static_resolve(self.value)
+        if isinstance(s, Undefined):
+            return
+
         self.static = True
-        self.static_val = value
+        self.static_val = s
 
     def eval(self, pred, doc, info=None):
         # If we are analyzing, we have the cached value of the literal,
