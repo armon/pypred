@@ -353,11 +353,18 @@ class Regex(Node):
 
 class Literal(Node):
     "String literal"
+    static = False
+    static_val = None
+
     def __init__(self, value):
         self.value = value
 
     def name(self):
         return "Literal %s at %s" % (self.value, self.position)
+
+    def set_static_value(self, value):
+        self.static = True
+        self.static_val = value
 
     def eval(self, pred, doc, info=None):
         # If we are analyzing, we have the cached value of the literal,
@@ -367,7 +374,10 @@ class Literal(Node):
             return info["literals"][self.value]
 
         # Use the predicate class to resolve the identifier
-        v = pred.resolve_identifier(doc, self.value)
+        if self.static:
+            v = self.static_val
+        else:
+            v = pred.resolve_identifier(doc, self.value)
 
         # Cache the result
         if info:
