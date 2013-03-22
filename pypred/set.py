@@ -109,7 +109,7 @@ class OptimizedPredicateSet(LiteralResolver):
         This must be done after any changes to the set of
         predicates.
         """
-        self.ast = merge(list(self.predicates))
+        self.ast = merge(self, list(self.predicates))
 
     def push_match(self, match):
         """

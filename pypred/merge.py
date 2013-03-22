@@ -14,7 +14,7 @@ import ast
 CACHE_PATTERNS = None
 
 
-def merge(predicates):
+def merge(pred_set, predicates):
     """
     Invoked with a set of predicates that should
     be merged into a single AST. The new AST uses
