@@ -11,6 +11,9 @@ from tiler import ASTPattern, SimplePattern, tile
 from optimizer import optimize
 import ast
 
+CACHE_PATTERNS = None
+
+
 def merge(predicates):
     """
     Invoked with a set of predicates that should
@@ -38,9 +41,11 @@ def merge(predicates):
     # Recursively rebuild the tree to optimize cost
     return recursive_refactor(all_asts[0])
 
+
 def dup(ast):
     "Duplicates an AST tree"
     return deepcopy(ast)
+
 
 def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
     """
@@ -105,6 +110,7 @@ def max_count(count):
             max_name = n
     return (max_count, max_name)
 
+
 def count_expressions(ast):
     """
     Folds over the AST and counts the expressions that are
@@ -127,6 +133,7 @@ def count_expressions(ast):
     # Return the counts
     return counts, nodes
 
+
 def count_func(counts, nodes, pattern, node):
     "Invoked to count a new pattern being matched"
     # Convert to a hashable name
@@ -136,6 +143,7 @@ def count_func(counts, nodes, pattern, node):
     counts[name] = counts.get(name, 0) + 1
     if name not in nodes:
         nodes[name] = node
+
 
 def node_name(node):
     "Returns a hashable name that can be used for counting"
@@ -153,8 +161,13 @@ def node_name(node):
     else:
         raise Exception("Unhandled class %s" % cls_name)
 
+
 def count_patterns():
     "Returns the patterns that we can count"
+    global CACHE_PATTERNS
+    if CACHE_PATTERNS:
+        return CACHE_PATTERNS
+
     simple_types = "types:Literal,Number,Constant,Undefined,Empty"
 
     # Handle a negation of a simple type
@@ -174,5 +187,6 @@ def count_patterns():
     p6 = SimplePattern("types:LogicalOperator", None, simple_types)
     p7 = SimplePattern("types:LogicalOperator", simple_types, simple_types)
 
-    return [p1,p2,p3,p4,p5,p6,p7]
+    CACHE_PATTERNS = [p1,p2,p3,p4,p5,p6,p7]
+    return CACHE_PATTERNS
 
