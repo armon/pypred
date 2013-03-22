@@ -6,7 +6,7 @@ from collections import defaultdict
 def mode(lst):
     "Returns the most common value"
     # Count each item
-    counts = defaultdict(0)
+    counts = defaultdict(int)
     for x in lst:
         counts[x] += 1
 
