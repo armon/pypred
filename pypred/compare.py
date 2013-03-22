@@ -11,7 +11,7 @@ from functools import partial
 import ast
 import util
 from ast import dup
-from tiler import ASTPattern, tile
+from tiler import SimplePattern, ASTPattern, tile
 
 
 def select_rewrite_expression(name, exprs):
@@ -54,54 +54,105 @@ def compare_rewrite(node, name, expr, assumed_result):
     name. Returns a new AST tree with the expr taking the
     assumed_result value, with potential optimizations.
     """
-    def replace_func(val, pattern, node):
-        return ast.Constant(val)
-
     # Handle equality
     if name[1] == "equality":
-        # Tile over the AST and replace the expresssion with
-        # the assumed result
-        pattern = ASTPattern(expr)
-        node = tile(node, [pattern], partial(replace_func, assumed_result))
-
-        # Tile over the AST and replace the inverse of the
-        # expresssion with the opposite assumed result
-        inverse = dup(expr)
-        if inverse.type in ("=", "is"):
-            inverse.type = "!="
-        else:
-            inverse.type = "="
-        pattern = ASTPattern(inverse)
-
-        print "Re-write inverse", inverse.description()
-        return tile(node, [pattern], partial(replace_func, not assumed_result))
+        return equality_rewrite(node, name, expr, assumed_result)
 
     # Handle comparison
     elif name[1] == "order":
-        """
-        IFF
-        a > b is True:
-          * a < b is False
-          * a <= b is False
-
-          * b > a is False
-          * b >= a is False
-
-          * b < a is True
-          * b <= a is True
-
-        a >= b is True:
-          * a < b is False
-          * b > a is False
-          * b <= a is True
-        """
-        # Tile over the AST and replace the expresssion with
-        # the assumed result
-        pattern = ASTPattern(expr)
-        return tile(node, [pattern], partial(replace_func, assumed_result))
+        return order_rewrite(node, name, expr, assumed_result)
 
     else:
         assert False, "Unknown compare!"
 
-    return node
+
+def equality_rewrite(node, name, expr, assumed_result):
+    # Determine the literal and static value
+    if name[2][1] == "static":
+        l_side = "right"
+        v_side = "left"
+        literal = expr.right.value
+        static_value = expr.left.value
+
+    # Right hande side
+    else:
+        l_side = "left"
+        v_side = "right"
+        literal = expr.left.value
+        static_value = expr.right.value
+
+    # Replace function to handle AST re-writes
+    def replace_func(pattern, node):
+        # Ignore if no match on the literal
+        if getattr(node, l_side).value != literal:
+            return None
+
+        # Do the static comparison
+        val = getattr(node, v_side).value
+        static_match = val == static_value
+
+        # Do we 'know' the value
+        if expr.type in ("=", "is"):
+            known = True
+        else:
+            known = False
+
+        if not assumed_result:
+            known = not known
+
+        # Check comparison to known result
+        if known:
+            if node.type in ("=", "is"):
+                const = static_match
+            else:
+                const = not static_match
+
+        # Is the comparison against the static match
+        elif static_match:
+            if node.type in ("=", "is"):
+                const = False
+            else:
+                const = True
+
+        # If it is being compared against another
+        # value, we aren't sure what to do
+        else:
+            return None
+
+        return ast.Constant(const)
+
+    # Simple pattern for CompareOperators
+    pattern = SimplePattern("types:CompareOperator",
+            "types:Literal" if l_side == "left" else None,
+            "types:Literal" if l_side == "right" else None)
+
+    # Tile to replace
+    return tile(node, [pattern], replace_func)
+
+
+def order_rewrite(node, name, expr, assumed_result):
+    """
+    IFF
+    a > b is True:
+      * a < b is False
+      * a <= b is False
+
+      * b > a is False
+      * b >= a is False
+
+      * b < a is True
+      * b <= a is True
+
+    a >= b is True:
+      * a < b is False
+      * b > a is False
+      * b <= a is True
+    """
+    def replace_func(val, pattern, node):
+        return ast.Constant(val)
+
+    # Tile over the AST and replace the expresssion with
+    # the assumed result
+    pattern = ASTPattern(expr)
+    return tile(node, [pattern], partial(replace_func, assumed_result))
 
