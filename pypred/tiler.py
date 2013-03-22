@@ -12,6 +12,31 @@ class Pattern(object):
         "Returns if the current node matches the pattern"
         return False
 
+class ASTPattern(object):
+    "Implements AST based pattern"
+    def __init__(self, ast):
+        self.ast = ast
+
+    def matches(self, node):
+        "Returns if the current node matches the ast"
+        return self.compare_nodes(self.ast, node)
+
+    @classmethod
+    def compare_nodes(cls, a, b):
+        if a.__class__ != b.__class__:
+            return False
+        if hasattr(a, "value") and a.value != b.value:
+            return False
+        if hasattr(a, "type") and a.type != b.type:
+            return False
+        if hasattr(a, "left") and \
+            not cls.compare_nodes(a.left, b.left):
+            return False
+        if hasattr(b, "right") and \
+            not cls.compare_nodes(a.right, b.right):
+            return False
+        return True
+
 class SimplePattern(object):
     "Implements a simple DSL for patterns"
     def __init__(self, node_p, left_p=None, right_p=None):
@@ -22,6 +47,7 @@ class SimplePattern(object):
         patters in the form of:
         * types:ASTType1,ASTType2
         * op:NodeType
+        * value:ValueStr
         * AND
 
         As an example, a pattern like:
@@ -59,6 +85,12 @@ class SimplePattern(object):
                 if cls.node_op(node) != op:
                     return False
 
+            # Check the node op
+            elif clause.startswith("value:"):
+                val = clause[6:]
+                if cls.node_value(node) != val:
+                    return False
+
             else:
                 raise Exception("Invalid pattern clause %s" % clause)
         return True
@@ -71,6 +103,13 @@ class SimplePattern(object):
     def node_op(cls, node):
         if hasattr(node, "type"):
             return node.type
+        else:
+            return None
+
+    @classmethod
+    def node_value(cls, node):
+        if hasattr(node, "value"):
+            return str(node.value)
         else:
             return None
 
