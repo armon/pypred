@@ -127,19 +127,19 @@ def tile(ast, patterns, func):
     for p in patterns:
         if p.matches(ast):
             result = func(p, ast)
-            if result:
+            if result is not None:
                 ast=result
 
     # Tile the left
     if hasattr(ast, "left"):
         result = tile(ast.left, patterns, func)
-        if result:
+        if result is not None:
             ast.left=result
 
     # Tile the right side
     if hasattr(ast, "right"):
         result = tile(ast.right, patterns, func)
-        if result:
+        if result is not None:
             ast.right=result
 
     return ast
