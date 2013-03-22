@@ -21,6 +21,18 @@ class LiteralResolver(object):
         """
         self.resolvers[identifier] = relv
 
+    def static_resolve(self, identifier):
+        """
+        Resolves a string literal identifier statically
+        in the absense of a document. This can return undefined
+        if not possible. This is used for optimizing predicates.
+        """
+        # Treat anything that is quoted as a string literal
+        if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
+            return identifier[1:-1]
+
+        return ast.Undefined()
+
     def resolve_identifier(self, document, identifier):
         """
         Resolves string literal identifiers in the scope of
