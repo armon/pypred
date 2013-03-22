@@ -8,6 +8,7 @@ import ast
 
 CACHE_PATTERNS = None
 
+
 def optimize(node, max_pass=10, min_change=1):
     """
     Takes an AST and returns one that is equivilent
@@ -19,6 +20,7 @@ def optimize(node, max_pass=10, min_change=1):
         changes, node = optimization_pass(node)
         passes += 1
     return node
+
 
 def optimization_pass(node):
     """
@@ -37,6 +39,7 @@ def optimization_pass(node):
     # Return the counts
     return info['changes'], node
 
+
 def optimization_func(info, pattern, node):
     "Invoked to count an applied optimization and to replace"
     info['changes'] += 1
@@ -44,6 +47,7 @@ def optimization_func(info, pattern, node):
         return pattern.replacement(node)
     else:
         return pattern.replacement
+
 
 def optimization_patterns():
     "Returns the patterns relevant for optimizations"
