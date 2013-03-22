@@ -6,7 +6,7 @@ predicates. It provides both a naive implementation that
 sequentially evaluates predicates, as well as an optimizing
 implementation.
 """
-from merge import merge
+from merge import merge, refactor
 from predicate import LiteralResolver
 
 
@@ -109,7 +109,8 @@ class OptimizedPredicateSet(LiteralResolver):
         This must be done after any changes to the set of
         predicates.
         """
-        self.ast = merge(self, list(self.predicates))
+        merged = merge(list(self.predicates))
+        self.ast = refactor(self, merged)
 
     def push_match(self, match):
         """
