@@ -13,7 +13,7 @@ def mode(lst):
     # Determine the maximum count
     max = 0
     item = None
-    for count, val in counts.iteritems():
+    for val, count in counts.iteritems():
         if count > max:
             max = count
             item = val
@@ -29,4 +29,14 @@ def median(lst):
     # Get the middle index
     middle = len(lst) / 2
     return lst[middle]
+
+def max_count(count):
+    "Returns the key with the maximum value"
+    max_count = 0
+    max_name = None
+    for n, c in count.iteritems():
+        if c > max_count:
+            max_count = c
+            max_name = n
+    return (max_count, max_name)
 
