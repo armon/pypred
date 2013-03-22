@@ -6,6 +6,9 @@ predicates. It provides both a naive implementation that
 sequentially evaluates predicates, as well as an optimizing
 implementation.
 """
+from merge import merge
+from predicate import LiteralResolver
+
 
 class PredicateSet(object):
     """
@@ -43,13 +46,14 @@ class PredicateSet(object):
         return match
 
 
-class OptimizedPredicateSet(object):
+class OptimizedPredicateSet(LiteralResolver):
     """
     This class implements an optimizing predicate set.
     Internally, the predicates are rewritten and merged
     into a single AST that can be evaluated in a single pass.
     """
     def __init__(self, preds=None):
+        LiteralResolver.__init__(self)
         self.predicates = set([])
         self.ast = None
         if preds:
@@ -105,11 +109,12 @@ class OptimizedPredicateSet(object):
         This must be done after any changes to the set of
         predicates.
         """
+        self.ast = merge(list(self.predicates))
 
-    def push_matches(self, matches):
+    def push_match(self, match):
         """
         This method is only to be invoked by the AST tree
         to push results during an evaluation.
         """
-        self._results.extend(matches)
+        self._results.append(match)
 
