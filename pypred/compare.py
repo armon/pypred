@@ -81,6 +81,15 @@ def equality_rewrite(node, name, expr, assumed_result):
         literal = expr.left.value
         static_value = expr.right.value
 
+    # Do we 'know' the value
+    if expr.type in ("=", "is"):
+        known = True
+    else:
+        known = False
+
+    if not assumed_result:
+        known = not known
+
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
         # Ignore if no match on the literal
@@ -90,15 +99,6 @@ def equality_rewrite(node, name, expr, assumed_result):
         # Do the static comparison
         val = getattr(node, v_side).value
         static_match = val == static_value
-
-        # Do we 'know' the value
-        if expr.type in ("=", "is"):
-            known = True
-        else:
-            known = False
-
-        if not assumed_result:
-            known = not known
 
         # Check comparison to known result
         if known:
