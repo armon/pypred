@@ -3,7 +3,13 @@ This module provides the AST nodes that are used to
 represent and later, evaluate a predicate.
 """
 import re
+from copy import deepcopy
 from functools import wraps
+
+
+def dup(ast):
+    "Duplicates an AST tree"
+    return deepcopy(ast)
 
 
 def failure_info(func):
