@@ -5,21 +5,24 @@ be evaluated in a single pass. At the heart of the
 algorithm is the merging of common expressions and
 using branches.
 """
-from copy import deepcopy
-from functools import partial
-from tiler import ASTPattern, SimplePattern, tile
-from optimizer import optimize
+from collections import defaultdict
+
 import ast
+import compare
+import util
+from ast import dup
+from optimizer import optimize
+from tiler import ASTPattern, SimplePattern, tile
 
 CACHE_PATTERNS = None
 
 
-def merge(pred_set, predicates):
+def merge(predicates):
     """
     Invoked with a set of predicates that should
     be merged into a single AST. The new AST uses
     the PushResults node to return the list of matching
-    predicates.
+    predicates, and Both nodes to combine.
     """
     # Nothing to do if only given a single predicate
     if len(predicates) == 1:
@@ -38,13 +41,30 @@ def merge(pred_set, predicates):
                 merged.append(both)
         all_asts = merged
 
+    # The root object has everything
+    return  all_asts[0]
+
+
+def refactor(pred_set, ast):
+    """
+    Performs a refactor of an AST tree to
+    get the maximum selectivity and minimze wasted
+    evaluations
+    """
+    # Perform static resolution of all literals
+    static_resolution(ast, pred_set)
+
     # Recursively rebuild the tree to optimize cost
-    return recursive_refactor(all_asts[0])
+    return recursive_refactor(ast)
 
 
-def dup(ast):
-    "Duplicates an AST tree"
-    return deepcopy(ast)
+def static_resolution(ast, pred):
+    "Attempts to statically resolve all literals."
+    def resolve_func(pattern, literal):
+        literal.static_resolve(pred)
+
+    pattern = SimplePattern("types:Literal")
+    tile(ast, [pattern], resolve_func)
 
 
 def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
@@ -61,23 +81,30 @@ def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
 
     # Do the cost calculation
     count, names = count_expressions(node)
-    max, name = max_count(count)
+    max, name = util.max_count(count)
 
     # Base case is that there is no further reductions
     if max <= min_count:
         return node
-    expr = names[name]
     print "Refactoring", depth, name, max
 
-    # Do constant re-writing on the sub-trees
+    # We now take the expression and do a simple
+    # path expansion. We have a "true" (left) branch,
+    # that assumes the expression is true. Then we have
+    # a "false" (right) branch. Each branch has the
+    # expression re-written into a constant value
+    # and then we do an optimization pass.
+    expr = select_rewrite_expression(name, names[name])
+    print "Re-write expr", expr.description()
+
     # Do a deep copy on the left side, since we
-    # are re-writing the tree, keep the right side
-    left = deepcopy(node)
-    left = rewrite_ast(left, expr, ast.Constant(True))
+    # are re-writing the tree, re-use the right side
+    left = dup(node)
+    left = rewrite_ast(left, name, expr, True)
     left = optimize(left)
     left = recursive_refactor(left, depth+1)
 
-    right = rewrite_ast(node, expr, ast.Constant(False))
+    right = rewrite_ast(node, name, expr, False)
     right = optimize(right)
     right = recursive_refactor(right, depth+1)
 
@@ -86,32 +113,38 @@ def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
     return ast.Branch(expr, left, right)
 
 
-def rewrite_ast(ast, expr, replacement):
+def select_rewrite_expression(name, exprs):
     """
-    Tries to rewrite part of the AST and does
-    node replacement. This is to do the constant
-    re-writing.
+    Selects an expression to use for re-writing
+    based on a list of possible expressions.
     """
-    def replace_func(pattern, node):
-        return replacement
+    # Check if this is a compare operator. The compare
+    # operator is special since it uses a 'static' re-write
+    # to group similar checks together. For example the checks
+    # gender is 'Male' / gender is 'Female' get merged into
+    # a compare against static.
+    if name[0] == "CompareOperator":
+        return compare.select_rewrite_expression(name, exprs)
 
-    # Tile over the AST and replace the expresssion
-    pattern = ASTPattern(expr)
-    return tile(ast, [pattern], replace_func)
-
-
-def max_count(count):
-    "Returns the maximum count with its name"
-    max_count = 0
-    max_name = None
-    for n, c in count.iteritems():
-        if c > max_count:
-            max_count = c
-            max_name = n
-    return (max_count, max_name)
+    # Use the first expression, as they are all the same
+    return exprs[0]
 
 
-def count_expressions(ast):
+def rewrite_ast(node, name, expr, assumed_result):
+    """
+    Based on the assumed value of an expression, re-writes
+    the AST tree to constants where possible.
+    """
+    if name[0] == "CompareOperator":
+        return compare.compare_rewrite(node, name, expr, assumed_result)
+    else:
+        # Tile over the AST and replace the expresssion
+        func = lambda pattern, node: ast.Constant(assumed_result)
+        pattern = ASTPattern(expr)
+        return tile(node, [pattern], func)
+
+
+def count_expressions(node):
     """
     Folds over the AST and counts the expressions that are
     can be refactored. Each named expression also maps to the
@@ -120,44 +153,55 @@ def count_expressions(ast):
     Returns a tuple of (counts, names). The counts maps
     names to counts, and the names maps the name to AST nodes.
     """
-    counts = {}
-    nodes = {}
+    counts = defaultdict(int)
+    nodes = defaultdict(list)
 
-    # Get a partial application of the count function
-    # that updates the proper dicts
-    func = partial(count_func, counts, nodes)
+    def count_func(pattern, node):
+        "Invoked to count a new pattern being matched"
+        # Convert to a hashable name
+        enable_static = isinstance(node, ast.CompareOperator)
+        name = node_name(node, enable_static)
 
-    # Tile over the ast
-    tile(ast, count_patterns(), func)
+        # Increment the counter value for this expression and store the nodes
+        counts[name] += 1
+        nodes[name].append(node)
 
     # Return the counts
+    tile(node, count_patterns(), count_func)
     return counts, nodes
 
 
-def count_func(counts, nodes, pattern, node):
-    "Invoked to count a new pattern being matched"
-    # Convert to a hashable name
-    name = node_name(node)
-
-    # Increment the counter value for this expression and store the nodes
-    counts[name] = counts.get(name, 0) + 1
-    if name not in nodes:
-        nodes[name] = node
-
-
-def node_name(node):
+def node_name(node, enable_static=False):
     "Returns a hashable name that can be used for counting"
     cls_name = node.__class__.__name__
-    if cls_name in ("Literal","Number","Constant","Regex"):
-        return (cls_name, node.value)
+    if cls_name == "Literal":
+        if enable_static and node.static:
+            return (cls_name, "static")
+        else:
+            return (cls_name, node.value)
+    elif cls_name in ("Number","Constant","Regex"):
+        if enable_static:
+            return (cls_name, "static")
+        else:
+            return (cls_name, node.value)
     elif cls_name in ("Undefined", "Empty"):
         return cls_name
     elif cls_name == "NegateOperator":
-        return (cls_name, node_name(node.left))
+        return (cls_name, node_name(node.left, enable_static))
     elif cls_name in ("CompareOperator", "LogicalOperator"):
-        return (cls_name, node.type, node_name(node.left), node_name(node.right))
+        if enable_static:
+            n_type = node.type
+            if n_type in ("=", "!=", "is"):
+                type = "equality"
+            elif n_type in (">", ">=", "<", "<="):
+                type = "order"
+            else:
+                type = n_type
+        else:
+            type = node.type
+        return (cls_name, type, node_name(node.left, enable_static), node_name(node.right, enable_static))
     elif cls_name in ("MatchOperator", "ContainsOperator"):
-        return (cls_name, node_name(node.left), node_name(node.right))
+        return (cls_name, node_name(node.left, enable_static), node_name(node.right, enable_static))
     else:
         raise Exception("Unhandled class %s" % cls_name)
 
