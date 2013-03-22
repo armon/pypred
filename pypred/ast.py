@@ -317,6 +317,12 @@ class Regex(Node):
             self.value = value
         self.re = None
 
+    def __deepcopy__(self, memo=None):
+        r = Regex(self.value)
+        r.position = self.position
+        r.re = self.re
+        return r
+
     def name(self):
         return "Regex %s at %s" % (repr(self.value), self.position)
 
@@ -474,7 +480,8 @@ class PushResult(Node):
     def eval(self, pred, doc, info=None):
         if self.left.eval(pred, doc, info):
             pred.push_match(self.pred)
-        return True
+            return True
+        return False
 
 
 class Branch(Node):
@@ -548,9 +555,9 @@ class Both(Node):
 
     @failure_info
     def eval(self, pred, doc, info=None):
-        any_true = self.left.eval(pred, doc, info) or \
-                self.right.eval(pred, doc, info)
-        return any_true
+        l = self.left.eval(pred, doc, info)
+        r = self.right.eval(pred, doc, info)
+        return l or r
 
     def failure_info(self, pred, doc, info):
         err = "Both sides of " + self.name() + " failed"
