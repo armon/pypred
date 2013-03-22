@@ -1,12 +1,68 @@
 from parser import get_lexer, get_parser
 import ast
 
+
 class InvalidPredicate(Exception):
     "Raised for evaluation of an invalid predicate"
     pass
 
 
-class Predicate(object):
+class LiteralResolver(object):
+    "Mixin to provide literal resolution"
+    def __init__(self):
+        self.resolvers = {}
+
+    def set_resolver(self, identifier, relv):
+        """
+        Sets a custom resolver. If resolve_identifier cannot
+        find the identifier in the document, and there is a matching
+        resolver, that resolver will be used. If the resolver is
+        callable, it will be invoked, otherwise it is returned as is.
+        """
+        self.resolvers[identifier] = relv
+
+    def resolve_identifier(self, document, identifier):
+        """
+        Resolves string literal identifiers in the scope of
+        the document while evaluating the predicate. Sub-classes
+        can override this to change the default behavior.
+        """
+        # Treat anything that is quoted as a string literal
+        if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
+            return identifier[1:-1]
+
+        # Check for the identifier in the document
+        if identifier in document:
+            return document[identifier]
+
+        # Allow the dot syntax for nested object lookup
+        # i.e. req.sdk.version = req["sdk"]["version"]
+        if "." in identifier:
+            parts = identifier.split(".")
+            found = True
+            root = document
+            for p in parts:
+                if p in root:
+                    root = root[p]
+                else:
+                    found = False
+                    break
+            if found:
+                return root
+
+        # Check if there is a resolver
+        if identifier in self.resolvers:
+            relv = self.resolvers[identifier]
+            if callable(relv):
+                return relv()
+            else:
+                return relv
+
+        # Return the undefined node if all else fails
+        return ast.Undefined()
+
+
+class Predicate(LiteralResolver):
     """
     This class provides a convenient interface for parsing and
     evaluating predicates. It is the recommended way of using PyPred.
@@ -29,10 +85,12 @@ class Predicate(object):
         # Validate the predicate
         if not isinstance(predicate, str):
             raise TypeError("Predicate must be a string!")
-        self.predicate = predicate
 
-        # Set of custom resolvers
-        self.resolvers = {}
+        # Initialize the literal resolver
+        LiteralResolver.__init__(self)
+
+        # Store the predicate
+        self.predicate = predicate
 
         # Setup the lexer
         lexer = get_lexer()
@@ -132,52 +190,4 @@ class Predicate(object):
             raise InvalidPredicate
         return self.ast.analyze(self, document)
 
-    def set_resolver(self, identifier, relv):
-        """
-        Sets a custom resolver. If resolve_identifier cannot
-        find the identifier in the document, and there is a matching
-        resolver, that resolver will be used. If the resolver is
-        callable, it will be invoked, otherwise it is returned as is.
-        """
-        self.resolvers[identifier] = relv
-
-    def resolve_identifier(self, document, identifier):
-        """
-        Resolves string literal identifiers in the scope of
-        the document while evaluating the predicate. Sub-classes
-        can override this to change the default behavior.
-        """
-        # Treat anything that is quoted as a string literal
-        if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
-            return identifier[1:-1]
-
-        # Check for the identifier in the document
-        if identifier in document:
-            return document[identifier]
-
-        # Allow the dot syntax for nested object lookup
-        # i.e. req.sdk.version = req["sdk"]["version"]
-        if "." in identifier:
-            parts = identifier.split(".")
-            found = True
-            root = document
-            for p in parts:
-                if p in root:
-                    root = root[p]
-                else:
-                    found = False
-                    break
-            if found:
-                return root
-
-        # Check if there is a resolver
-        if identifier in self.resolvers:
-            relv = self.resolvers[identifier]
-            if callable(relv):
-                return relv()
-            else:
-                return relv
-
-        # Return the undefined node if all else fails
-        return ast.Undefined()
 
