@@ -8,12 +8,10 @@ from tiler import tile, Pattern
 def compact(node):
     "Modifies the AST tree in place to reduce the duplicated nodes."
     cache = {}
-    removed = {'c':0}
     def repl_func(pattern, node):
         # Check for a cached node
         name = node_name(node)
         if name and name in cache:
-            removed['c'] += 1
             return cache[name]
         elif name:
             cache[name] = node
