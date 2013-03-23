@@ -70,7 +70,7 @@ def static_resolution(ast, pred):
     tile(ast, [pattern], resolve_func)
 
 
-def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
+def recursive_refactor(node, depth=0, max_depth=8, min_count=32):
     """
     Recursively refactors an AST tree. At each step,
     we determine the most expensive expression, and move
@@ -89,7 +89,6 @@ def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
     # Base case is that there is no further reductions
     if max <= min_count:
         return node
-    print "Refactoring", depth, name, max
 
     # We now take the expression and do a simple
     # path expansion. We have a "true" (left) branch,
@@ -98,7 +97,6 @@ def recursive_refactor(node, depth=0, max_depth=8, min_count=2):
     # expression re-written into a constant value
     # and then we do an optimization pass.
     expr = select_rewrite_expression(name, names[name])
-    print "Re-write expr", expr.description()
 
     # Do a deep copy on the left side, since we
     # are re-writing the tree, re-use the right side
