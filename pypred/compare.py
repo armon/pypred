@@ -92,19 +92,9 @@ def compare_rewrite(node, name, expr, assumed_result):
 
 
 def equality_rewrite(node, name, expr, assumed_result):
-    # Determine the literal and static value
-    if name[2][1] == "static":
-        l_side = "right"
-        v_side = "left"
-        literal = expr.right.value
-        static_value = expr.left.value
-
-    # Right hande side
-    else:
-        l_side = "left"
-        v_side = "right"
-        literal = expr.left.value
-        static_value = expr.right.value
+    # Get the literal and static compare values
+    literal = expr.left.value
+    static_value = expr.right.value
 
     # Do we 'know' the value
     if expr.type in ("=", "is"):
@@ -118,11 +108,11 @@ def equality_rewrite(node, name, expr, assumed_result):
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
         # Ignore if no match on the literal
-        if getattr(node, l_side).value != literal:
+        if node.left.value != literal:
             return None
 
         # Do the static comparison
-        val = getattr(node, v_side).value
+        val = node.right.value
         static_match = val == static_value
 
         # Check comparison to known result
@@ -146,12 +136,8 @@ def equality_rewrite(node, name, expr, assumed_result):
 
         return ast.Constant(const)
 
-    # Simple pattern for CompareOperators
-    pattern = SimplePattern("types:CompareOperator",
-            "types:Literal" if l_side == "left" else None,
-            "types:Literal" if l_side == "right" else None)
-
     # Tile to replace
+    pattern = SimplePattern("types:CompareOperator", "types:Literal")
     return tile(node, [pattern], replace_func)
 
 
