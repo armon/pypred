@@ -138,9 +138,11 @@ def rewrite_ast(node, name, expr, assumed_result):
     """
     if name[0] == "CompareOperator":
         return compare.compare_rewrite(node, name, expr, assumed_result)
+
     else:
         # Tile over the AST and replace the expresssion
-        func = lambda pattern, node: ast.Constant(assumed_result)
+        const = ast.Constant(assumed_result)
+        func = lambda p, n: const
         pattern = ASTPattern(expr)
         return tile(node, [pattern], func)
 
@@ -202,7 +204,7 @@ def node_name(node, enable_static=False):
             type = node.type
         return (cls_name, type, node_name(node.left, enable_static), node_name(node.right, enable_static))
     elif cls_name in ("MatchOperator", "ContainsOperator"):
-        return (cls_name, node_name(node.left, enable_static), node_name(node.right, enable_static))
+        return (cls_name, node_name(node.left), node_name(node.right))
     else:
         raise Exception("Unhandled class %s" % cls_name)
 
