@@ -199,7 +199,7 @@ def order_rewrite(node, name, expr, assumed_result):
 
             if less_than and assert_less:
                 # a <= b, a < c -> c > b
-                if maybe_equals:
+                if maybe_equals and not assert_equals:
                     if node_val > static_value:
                         const = True
 
@@ -210,7 +210,7 @@ def order_rewrite(node, name, expr, assumed_result):
 
             elif not less_than and not assert_less:
                 # a >=b, a > c -> c < b
-                if maybe_equals:
+                if maybe_equals and not assert_equals:
                     if node_val < static_value:
                         const = True
 
@@ -221,7 +221,7 @@ def order_rewrite(node, name, expr, assumed_result):
 
             elif less_than and not assert_less:
                 # a <= b, a > c -> iff c > b False
-                if maybe_equals:
+                if maybe_equals and not assert_equals:
                     if node_val > static_value:
                         const = False
 
@@ -232,7 +232,7 @@ def order_rewrite(node, name, expr, assumed_result):
 
             elif not less_than and assert_less:
                 # a >= b, a < c -> iff c < b True
-                if maybe_equals:
+                if maybe_equals and not assert_equals:
                     if node_val < static_value:
                         const = False
 
