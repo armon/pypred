@@ -6,11 +6,9 @@ make other inferences. For example, if we assume "a > b",
 then we know that "b < a", "b <=a" are both true, and
 we can safely rewrite that as a constant.
 """
-from functools import partial
-
 import ast
 import util
-from tiler import SimplePattern, ASTPattern, tile
+from tiler import SimplePattern, tile
 
 
 

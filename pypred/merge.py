@@ -70,7 +70,7 @@ def static_resolution(ast, pred):
     tile(ast, [pattern], resolve_func)
 
 
-def recursive_refactor(node, depth=0, max_depth=8, min_count=32):
+def recursive_refactor(node, depth=0, max_depth=4, min_count=64):
     """
     Recursively refactors an AST tree. At each step,
     we determine the most expensive expression, and move
