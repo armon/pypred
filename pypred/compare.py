@@ -29,9 +29,14 @@ def canonicalize(node):
         if not l_literal and r_literal:
             n.reverse()
 
-        # Put the literals in order
-        elif l_literal and r_literal and n.left.value > n.right.value:
+        # Put static values on the right
+        elif l_literal and r_literal and n.left.static and not n.right.static:
             n.reverse()
+
+        # Put the literals in order
+        elif l_literal and r_literal and n.left.value > n.right.value and not n.right.static:
+            n.reverse()
+
 
     p = SimplePattern("types:CompareOperator")
     return tile(node, [p], replace_func)
