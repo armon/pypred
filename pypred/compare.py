@@ -25,7 +25,7 @@ def canonicalize(node):
     """
     def replace_func(pattern, n):
         l_literal = isinstance(n.left, ast.Literal)
-        r_literal = isinstance(n.left, ast.Literal)
+        r_literal = isinstance(n.right, ast.Literal)
 
         # Always put the literal on the left
         if not l_literal and r_literal:
@@ -45,32 +45,25 @@ def select_rewrite_expression(name, exprs):
     tries to select an expression with the highest selectivity
     for use in AST re-writing.
     """
-    # Are the static values on the left hand side?
-    if name[2][1] == "static":
-        side = "left"
-        values = [e.left.value for e in exprs]
-    # Right hande side
-    elif name[3][1] == "static":
-        side = "right"
-        values = [e.right.value for e in exprs]
-    else:
-        assert False, "No static value found!"
-
-    # For equality check (=, !=, is), select the most mode
+    # For equality check (=, !=, is), select the mode
     if name[1] == "equality":
+        values = [e.right.value for e in exprs]
         filter_using = util.mode(values)
         for e in exprs:
-            if getattr(e, side).value == filter_using:
+            if e.right.value == filter_using:
                 return e
 
-    # For ordering checks, select the median value
-    elif name[1] == "order":
+    # For ordering checks, select the median value for static
+    elif name[1] == "order" and name[3][1] == "static":
+        values = [e.right.value for e in exprs]
         filter_using = util.median(values)
         for e in exprs:
-            if getattr(e, side).value == filter_using:
+            if e.right.value == filter_using:
                 return e
 
-    assert False, "Failed to select expression!"
+    # For ordering checks without static values, use any
+    else:
+        return exprs[0]
 
 
 def compare_rewrite(node, name, expr, assumed_result):
@@ -107,6 +100,10 @@ def equality_rewrite(node, name, expr, assumed_result):
 
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
+        # Ignore if not an equality check
+        if node.type not in ("=", "!=", "is"):
+            return None
+
         # Ignore if no match on the literal
         if node.left.value != literal:
             return None
@@ -159,11 +156,99 @@ def order_rewrite(node, name, expr, assumed_result):
       * b > a is False
       * b <= a is True
     """
-    def replace_func(val, pattern, node):
-        return ast.Constant(val)
+    # Get the literal and static compare values
+    literal = expr.left.value
+    static_value = expr.right.value
+    numeric = isinstance(expr.right, ast.Number)
 
-    # Tile over the AST and replace the expresssion with
-    # the assumed result
-    pattern = ASTPattern(expr)
-    return tile(node, [pattern], partial(replace_func, assumed_result))
+    # Based on the assumed result
+    less_than = "<" in expr.type
+    maybe_equals = "=" in expr.type
+    if not assumed_result:
+        less_than = not less_than
+        maybe_equals = not maybe_equals
+
+    # Replace function to handle AST re-writes
+    def replace_func(pattern, node):
+        # Ignore if not an ordering check
+        if node.type not in ("<", "<=", ">", ">="):
+            return None
+
+        # Ignore if no match on the literal
+        if node.left.value != literal:
+            return None
+
+        node_val = node.right.value
+        if not numeric and node_val != static_value:
+            return None
+
+        # Check what this node is asserting
+        assert_less = "<" in node.type
+        assert_equals = "=" in node.type
+
+        # For literals, check that assertions match
+        if not numeric:
+            const = (less_than == assert_less)
+            if maybe_equals:
+                const = const and assert_equals
+
+        # For numerics we can do static analysis
+        else:
+            # Some cases cannot be re-written
+            const = None
+
+            if less_than and assert_less:
+                # a <= b, a < c -> c > b
+                if maybe_equals:
+                    if node_val > static_value:
+                        const = True
+
+                # a < b, a < c -> c >= b
+                else:
+                    if node_val >= static_value:
+                        const = True
+
+            elif not less_than and not assert_less:
+                # a >=b, a > c -> c < b
+                if maybe_equals:
+                    if node_val < static_value:
+                        const = True
+
+                # a > b, a > c -> c <= b
+                else:
+                    if node_val <= static_value:
+                        const = True
+
+            elif less_than and not assert_less:
+                # a <= b, a > c -> iff c > b False
+                if maybe_equals:
+                    if node_val > static_value:
+                        const = False
+
+                # a < b, a >= c -> iff c >= b False
+                else:
+                    if node_val >= static_value:
+                        const = False
+
+            elif not less_than and assert_less:
+                # a >= b, a < c -> iff c < b True
+                if maybe_equals:
+                    if node_val < static_value:
+                        const = False
+
+                # a > b, a <= c -> iff c <= b False
+                else:
+                    if node_val <= static_value:
+                        const = False
+
+        # No replacement in some situations
+        if const is None:
+            return None
+
+        return ast.Constant(const)
+
+    # Tile to replace
+    pattern = SimplePattern("types:CompareOperator",
+            "types:Literal", "types:Number" if numeric else "types:Literal")
+    return tile(node, [pattern], replace_func)
 
