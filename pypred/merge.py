@@ -17,6 +17,78 @@ from tiler import ASTPattern, SimplePattern, tile
 
 CACHE_PATTERNS = None
 
+class RefactorSettings():
+    def __init__(self, max_depth, min_select, max_opt_pass, min_change):
+        """
+        Defines the settings for a refactor. Parameters:
+        -`max_depth` - Maximum branch depth of the tree. This causes
+         the tree to grow by O(2^N) at worst in terms of nodes.
+         However, at best it does reduce evaluations by O(2^N).
+
+        -`min_select` - The minimum count of an expression before
+         it is not eligible for being pushed into a branch. This can
+         cause certain paths of the tree to have fewer branches.
+
+        -`max_opt_pass` - Maximum number of optimization passes.
+          This restricts the runs of the optimizer. Generally not
+          recommended, instead min_change should be used to stop.
+
+        -`min_change` - Minimum changes in a pass of the optimizer
+         before the optimizer terminates. Best to set this to 1 and
+         allow the optimizer to run until there are no further changes.
+        """
+        self.max_depth = max_depth
+        self.min_select = min_select
+        self.max_opt_pass = max_opt_pass
+        self.min_change = min_change
+
+        self.static_rewrite = True
+        self.canonicalize = True
+        self.refactor = True
+        self.compact = True
+
+    @classmethod
+    def minimum(cls):
+        """
+        Returns settings that should run very fast,
+        but does very minimal pruning.
+
+        Worst case blow up of 4 times (2^2).
+        """
+        return RefactorSettings(2, 8, 32, 1)
+
+    @classmethod
+    def shallow(cls):
+        """
+        Returns settings that should run relatively fast.
+        Maximum branch depth of 4, selectivity of 32, and
+        largely unrestricted optimization.
+
+        Worst case blow up of 16 times (2^4).
+        """
+        return RefactorSettings(4, 16, 32, 1)
+
+    @classmethod
+    def deep(cls):
+        """
+        Returns settings that should prune very well.
+        Maximum branch depth of 8, selectivity of 16, and
+        largely unrestricted optimization.
+
+        Worst case blow up of 256 times (2^8).
+        """
+        return RefactorSettings(8, 32, 32, 1)
+
+    @classmethod
+    def extreme(cls):
+        """
+        Returns settings that should prune with extreme
+        branching. This will be very slow.
+
+        Worst case blow up of 65536 times (2^16).
+        """
+        return RefactorSettings(16, 64, 32, 1)
+
 
 def merge(predicates):
     """
@@ -46,23 +118,32 @@ def merge(predicates):
     return  all_asts[0]
 
 
-def refactor(pred_set, ast):
+def refactor(pred_set, ast, settings=None):
     """
     Performs a refactor of an AST tree to
     get the maximum selectivity and minimze wasted
     evaluations
     """
+    # Determine our settings
+    if settings is None:
+        settings = RefactorSettings.shallow()
+
     # Perform static resolution of all literals
-    static_resolution(ast, pred_set)
+    if settings.static_rewrite:
+        static_resolution(ast, pred_set)
 
     # Canonicalize the AST
-    ast = compare.canonicalize(ast)
+    if settings.canonicalize:
+        ast = compare.canonicalize(ast)
 
     # Recursively rebuild the tree to optimize cost
-    ast = recursive_refactor(ast)
+    if settings.refactor:
+        ast = recursive_refactor(ast, settings)
 
     # Compact the tree
-    return compact.compact(ast)
+    if settings.compact:
+        compact.compact(ast)
+    return ast
 
 
 def static_resolution(ast, pred):
@@ -74,7 +155,7 @@ def static_resolution(ast, pred):
     tile(ast, [pattern], resolve_func)
 
 
-def recursive_refactor(node, depth=0, max_depth=4, min_count=64):
+def recursive_refactor(node, settings, depth=0):
     """
     Recursively refactors an AST tree. At each step,
     we determine the most expensive expression, and move
@@ -83,7 +164,7 @@ def recursive_refactor(node, depth=0, max_depth=4, min_count=64):
     replaced with a constant.
     """
     # Check for max depth
-    if depth == max_depth:
+    if depth == settings.max_depth:
         return node
 
     # Do the cost calculation
@@ -91,7 +172,7 @@ def recursive_refactor(node, depth=0, max_depth=4, min_count=64):
     max, name = util.max_count(count)
 
     # Base case is that there is no further reductions
-    if max <= min_count:
+    if max < settings.min_select:
         return node
 
     # We now take the expression and do a simple
@@ -106,12 +187,12 @@ def recursive_refactor(node, depth=0, max_depth=4, min_count=64):
     # are re-writing the tree, re-use the right side
     left = dup(node)
     left = rewrite_ast(left, name, expr, True)
-    left = optimize(left)
-    left = recursive_refactor(left, depth+1)
+    left = optimize(left, settings.max_opt_pass, settings.min_change)
+    left = recursive_refactor(left, settings, depth+1)
 
     right = rewrite_ast(node, name, expr, False)
-    right = optimize(right)
-    right = recursive_refactor(right, depth+1)
+    right = optimize(right, settings.max_opt_pass, settings.min_change)
+    right = recursive_refactor(right, settings, depth+1)
 
     # Now we can push the most common expression into
     # a branch, and conditionally execute the sub-ast's
