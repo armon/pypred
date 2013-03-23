@@ -7,10 +7,10 @@ merging.
 """
 
 class Pattern(object):
-    "Base class for patterns"
+    "Base class for patterns. Always matches"
     def matches(self, node):
         "Returns if the current node matches the pattern"
-        return False
+        return True
 
 class ASTPattern(object):
     "Implements AST based pattern"
