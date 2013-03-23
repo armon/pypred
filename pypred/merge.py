@@ -182,11 +182,13 @@ def node_name(node, enable_static=False):
             return (cls_name, "static")
         else:
             return (cls_name, node.value)
-    elif cls_name in ("Number","Constant","Regex"):
+    elif cls_name == "Number":
         if enable_static:
             return (cls_name, "static")
         else:
             return (cls_name, node.value)
+    elif cls_name in ("Constant","Regex"):
+        return (cls_name, node.value)
     elif cls_name in ("Undefined", "Empty"):
         return cls_name
     elif cls_name == "NegateOperator":
