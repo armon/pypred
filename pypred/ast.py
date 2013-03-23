@@ -184,6 +184,16 @@ class NegateOperator(Node):
 
 class CompareOperator(Node):
     "Used for all the mathematical comparisons"
+    OP_REVERSE = {
+            ">=": "=<", # a >= b -> b =< a
+            ">": "<",   # a > b  -> b < a
+            "<": ">",   # a < b  -> b > a
+            "<=": ">=", # a <= b -> b >= a
+            "=": "=",   # a = b  -> b = a
+            "!=": "!=", # a != b -> b != a
+            "is": "is"  # a is b -> b is a
+    }
+
     def __init__(self, comparison, left, right):
         self.type = comparison
         self.left = left
@@ -198,6 +208,16 @@ class CompareOperator(Node):
             errs.append("Unknown compare operator %s" % self.type)
             return False
         return True
+
+    def reverse(self):
+        "Reverses the term order without changing eval"
+        # Reverse left / right
+        t = self.right
+        self.right = self.left
+        self.left = t
+
+        # Reverse the op type
+        self.type = self.OP_REVERSE[self.type]
 
     @failure_info
     def eval(self, pred, doc, info=None):
