@@ -9,6 +9,7 @@ from collections import defaultdict
 
 import ast
 import compare
+import compact
 import util
 from ast import dup
 from optimizer import optimize
@@ -58,7 +59,10 @@ def refactor(pred_set, ast):
     ast = compare.canonicalize(ast)
 
     # Recursively rebuild the tree to optimize cost
-    return recursive_refactor(ast)
+    ast = recursive_refactor(ast)
+
+    # Compact the tree
+    return compact.compact(ast)
 
 
 def static_resolution(ast, pred):
