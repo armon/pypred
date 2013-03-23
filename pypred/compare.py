@@ -10,8 +10,33 @@ from functools import partial
 
 import ast
 import util
-from ast import dup
 from tiler import SimplePattern, ASTPattern, tile
+
+
+
+def canonicalize(node):
+    """
+    Rewrites the AST so that all comparisons are in a
+    canonical order. This allows the expressions:
+        gender is 'Male' / 'Male' is gender
+
+    to be transformed into the same form. This makes
+    refactoring expressions order independent.
+    """
+    def replace_func(pattern, n):
+        l_literal = isinstance(n.left, ast.Literal)
+        r_literal = isinstance(n.left, ast.Literal)
+
+        # Always put the literal on the left
+        if not l_literal and r_literal:
+            n.reverse()
+
+        # Put the literals in order
+        elif l_literal and r_literal and n.left.value > n.right.value:
+            n.reverse()
+
+    p = SimplePattern("types:CompareOperator")
+    return tile(node, [p], replace_func)
 
 
 def select_rewrite_expression(name, exprs):
