@@ -54,6 +54,9 @@ def refactor(pred_set, ast):
     # Perform static resolution of all literals
     static_resolution(ast, pred_set)
 
+    # Canonicalize the AST
+    ast = compare.canonicalize(ast)
+
     # Recursively rebuild the tree to optimize cost
     return recursive_refactor(ast)
 
