@@ -35,7 +35,7 @@ def gen_predicates(num):
     for x in xrange(num):
         r = random.randint(0,5)
         if r == 0:
-            p_str = "name is '%s'" % random.choice(SELECT_WORDS)
+            p_str = "name is '%s' and not test" % random.choice(SELECT_WORDS)
         elif r == 1:
             gender = "Male" if random.random() > 0.5 else "Female"
             age = random.randint(1, 100)
@@ -47,7 +47,7 @@ def gen_predicates(num):
             p_str = "age > %d and city matches '%s'" % (age, city_reg)
         elif r == 3:
             interest = random.choice(SELECT_WORDS)
-            p_str = "interests contains '%s'" % interest
+            p_str = "interests contains '%s' and test" % interest
         elif r == 4:
             gender = "Male" if random.random() else "Female"
             p_str = "name is '%s' or gender is '%s'" % (random.choice(SELECT_WORDS), gender)
@@ -70,8 +70,9 @@ def gen_docs(num):
         interests = [random.choice(SELECT_WORDS) for x in xrange(3)]
         city = random.choice(WORDS)
         age = random.randint(1, 100)
+        test = True if random.random() > 0.5 else False
         gender = "Male" if random.random() > 0.5 else "Female"
-        d = {'name': random.choice(SELECT_NAMES), 'interests': interests, 'city': city, 'age':age, 'gender': gender}
+        d = {'name': random.choice(SELECT_NAMES), 'interests': interests, 'city': city, 'age':age, 'gender': gender, 'test': test}
         res.append(d)
     return res
 
@@ -86,7 +87,7 @@ def make_set_optimized(preds):
     #print s.ast.description()
     return s
 
-def main(numpreds=100, numdocs=2000, printp=0):
+def main(numpreds=1000, numdocs=2000, printp=0):
     preds = gen_predicates(numpreds)
     docs = gen_docs(numdocs)
     s1 = make_set(preds)

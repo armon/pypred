@@ -182,18 +182,26 @@ def node_name(node, enable_static=False):
             return (cls_name, "static")
         else:
             return (cls_name, node.value)
+
     elif cls_name == "Number":
         if enable_static:
             return (cls_name, "static")
         else:
             return (cls_name, node.value)
+
     elif cls_name in ("Constant","Regex"):
         return (cls_name, node.value)
+
     elif cls_name in ("Undefined", "Empty"):
         return cls_name
+
     elif cls_name == "NegateOperator":
-        return (cls_name, node_name(node.left, enable_static))
-    elif cls_name in ("CompareOperator", "LogicalOperator"):
+        # Return the name of the sub-expression, since if
+        # we do a constant re-write of that, the optimizer
+        # can replace the negate operator
+        return node_name(node.left)
+
+    elif cls_name == "CompareOperator":
         if enable_static:
             n_type = node.type
             if n_type in ("=", "!=", "is"):
@@ -205,6 +213,16 @@ def node_name(node, enable_static=False):
         else:
             type = node.type
         return (cls_name, type, node_name(node.left, enable_static), node_name(node.right, enable_static))
+
+    elif cls_name == "LogicalOperator":
+        # Return the name of the literal sub-expression, since
+        # the optimizer can use that to remove the logical operator
+        l_name = node_name(node.left)
+        if l_name[0] == "Literal":
+            return l_name
+        else:
+            return node_name(node.right)
+
     elif cls_name in ("MatchOperator", "ContainsOperator"):
         return (cls_name, node_name(node.left), node_name(node.right))
     else:
@@ -220,7 +238,7 @@ def count_patterns():
     simple_types = "types:Literal,Number,Constant,Undefined,Empty"
 
     # Handle a negation of a simple type
-    p1 = SimplePattern("types:NegateOperator", simple_types)
+    p1 = SimplePattern("types:NegateOperator", "types:Literal")
 
     # Handle comparison of a simple types
     p2 = SimplePattern("types:CompareOperator", simple_types, simple_types)
@@ -232,10 +250,9 @@ def count_patterns():
     p4 = SimplePattern("types:ContainsOperator", simple_types, simple_types)
 
     # Handle simple logical expressions
-    p5 = SimplePattern("types:LogicalOperator", simple_types, None)
-    p6 = SimplePattern("types:LogicalOperator", None, simple_types)
-    p7 = SimplePattern("types:LogicalOperator", simple_types, simple_types)
+    p5 = SimplePattern("types:LogicalOperator", "types:Literal", None)
+    p6 = SimplePattern("types:LogicalOperator", None, "types:Literal")
 
-    CACHE_PATTERNS = [p1,p2,p3,p4,p5,p6,p7]
+    CACHE_PATTERNS = [p1,p2,p3,p4,p5,p6]
     return CACHE_PATTERNS
 
