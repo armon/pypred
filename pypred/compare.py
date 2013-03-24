@@ -10,6 +10,8 @@ import ast
 import util
 from tiler import SimplePattern, tile
 
+EQUALITY = ("=", "is")
+INEQUALITY = ("!=",)
 
 
 def canonicalize(node):
@@ -91,9 +93,11 @@ def equality_rewrite(node, name, expr, assumed_result):
     # Get the literal and static compare values
     literal = expr.left.value
     static_value = expr.right.value
+    is_static = expr.right.static
 
-    # Do we 'know' the value
-    if expr.type in ("=", "is"):
+    # Do we 'know' the value to be something
+    # specific, or can we just eliminate a possible value.
+    if expr.type in EQUALITY:
         known = True
     else:
         known = False
@@ -112,28 +116,34 @@ def equality_rewrite(node, name, expr, assumed_result):
             return None
 
         # Do the static comparison
-        val = node.right.value
-        static_match = val == static_value
+        static_match = node.right.value == static_value
 
-        # Check comparison to known result
-        if known:
-            if node.type in ("=", "is"):
+        # If we are refactoring equality on a non-static
+        # variable, then we have a limit set of rewrites.
+        # for example, if a = b, then a = c could also be true,
+        # since b = c is possible.
+        const = None
+        if not is_static:
+            # a = b , a = b. a = c could also be true!
+            if node.type in EQUALITY and static_match:
+                const = known
+
+            # a != b, a != b
+            elif node.type in INEQUALITY and static_match:
+                const = not known
+
+        # If we are refactoring equality on a static
+        # variable, then we can statically perform the comparisons
+        # and do more aggressive rewrites of the AST.
+        else:
+            if node.type in EQUALITY:
                 const = static_match
             else:
                 const = not static_match
 
-        # Is the comparison against the static match
-        elif static_match:
-            if node.type in ("=", "is"):
-                const = False
-            else:
-                const = True
-
-        # If it is being compared against another
-        # value, we aren't sure what to do
-        else:
+        # If we can't do a rewrite, just skip this node
+        if const is None:
             return None
-
         return ast.Constant(const)
 
     # Tile to replace
