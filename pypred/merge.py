@@ -122,7 +122,9 @@ def refactor(pred_set, ast, settings=None):
     """
     Performs a refactor of an AST tree to
     get the maximum selectivity and minimze wasted
-    evaluations
+    evaluations. Settings are controlled using
+    a RefactorSettings object. If none is provided
+    the `shallow` settings are used.
     """
     # Determine our settings
     if settings is None:
