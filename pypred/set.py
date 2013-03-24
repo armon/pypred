@@ -52,8 +52,9 @@ class OptimizedPredicateSet(LiteralResolver):
     Internally, the predicates are rewritten and merged
     into a single AST that can be evaluated in a single pass.
     """
-    def __init__(self, preds=None):
+    def __init__(self, preds=None, settings=None):
         LiteralResolver.__init__(self)
+        self.settings = settings
         self.predicates = set([])
         self.ast = None
         if preds:
@@ -110,7 +111,7 @@ class OptimizedPredicateSet(LiteralResolver):
         predicates.
         """
         merged = merge(list(self.predicates))
-        self.ast = refactor(self, merged)
+        self.ast = refactor(self, merged, self.settings)
 
     def push_match(self, match):
         """
