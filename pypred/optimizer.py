@@ -9,7 +9,7 @@ import ast
 CACHE_PATTERNS = None
 
 
-def optimize(node, max_pass=10, min_change=1):
+def optimize(node, max_pass=32, min_change=1):
     """
     Takes an AST and returns one that is equivilent
     but optimized.
@@ -29,7 +29,7 @@ def optimization_pass(node):
     should converge to 0 with enough passes.
     """
     # Get a partial application of the optimization function
-    info = {'changes': 0}
+    info = {'c': 0}
     func = partial(optimization_func, info)
 
     # Tile over the ast
@@ -37,12 +37,12 @@ def optimization_pass(node):
     node = tile(node, patterns, func)
 
     # Return the counts
-    return info['changes'], node
+    return info['c'], node
 
 
 def optimization_func(info, pattern, node):
     "Invoked to count an applied optimization and to replace"
-    info['changes'] += 1
+    info['c'] += 1
     if callable(pattern.replacement):
         return pattern.replacement(node)
     else:
