@@ -31,14 +31,18 @@ def canonicalize(node):
         if not l_literal and r_literal:
             n.reverse()
 
-        # Put static values on the right
-        elif l_literal and r_literal and n.left.static and not n.right.static:
-            n.reverse()
+        elif l_literal and r_literal:
+            # Put static values on the right
+            if n.left.static and not n.right.static:
+                n.reverse()
 
-        # Put the literals in order
-        elif l_literal and r_literal and n.left.value > n.right.value and not n.right.static:
-            n.reverse()
+            # Put the literals in order (both non-static)
+            elif not n.left.static and not n.right.static and n.left.value > n.right.value:
+                n.reverse()
 
+            # Put the literals in order (both static)
+            elif n.left.static and n.right.static and n.left.value > n.right.value:
+                n.reverse()
 
     p = SimplePattern("types:CompareOperator")
     return tile(node, [p], replace_func)
@@ -232,7 +236,6 @@ def order_rewrite(node, name, expr, assumed_result):
         # No replacement in some situations
         if const is None:
             return None
-
         return ast.Constant(const)
 
 
