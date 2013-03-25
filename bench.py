@@ -1,7 +1,7 @@
+import sys
 import time
 import random
 import cPickle
-random.seed(1)
 from pypred import Predicate, PredicateSet, OptimizedPredicateSet
 
 def get_words():
@@ -92,13 +92,13 @@ def size(s, name):
     l = len(cPickle.dumps(s))
     print "Size: %s %d" % (name, l)
 
-def main(numpreds=1000, numdocs=2000, printp=0):
+def main(numpreds=100, numdocs=2000, printp=0):
     preds = gen_predicates(numpreds)
     docs = gen_docs(numdocs)
     s1 = make_set(preds)
     s2 = make_set_optimized(preds)
-    size(s1, "Naive")
-    size(s2.ast, "Opt")
+    #size(s1, "Naive")
+    #size(s2.ast, "Opt")
 
     if printp:
         print "Predicates:"
@@ -137,7 +137,7 @@ def main(numpreds=1000, numdocs=2000, printp=0):
                 for p in r2:
                     print "\t",p.predicate
                 print
-
+        sys.exit(1)
 
 
 if __name__ == "__main__":
