@@ -36,18 +36,22 @@ class Node(object):
         cls = self.__class__.__name__
         return "%s at %s" % (cls, self.position)
 
-    def description(self, buf=None, depth=0):
+    def description(self, buf=None, depth=0, max_depth=0):
         """
         Provides a human readable tree description
         """
         if not buf:
             buf = ""
         pad = depth * "\t"
+        if max_depth and depth == max_depth:
+            buf += pad + "...\n"
+            return buf
+
         buf += pad + self.name() + "\n"
         if hasattr(self, "left"):
-            buf = self.left.description(buf, depth+1)
+            buf = self.left.description(buf, depth+1, max_depth)
         if hasattr(self, "right"):
-            buf = self.right.description(buf, depth+1)
+            buf = self.right.description(buf, depth+1, max_depth)
         return buf
 
     def __repr__(self):
@@ -541,19 +545,23 @@ class Branch(Node):
     def name(self):
         return "Branch on %s" % self.expr.name()
 
-    def description(self, buf=None, depth=0):
+    def description(self, buf=None, depth=0, max_depth=0):
         """
         Provides a human readable tree description
         """
         if not buf:
             buf = ""
         pad = depth * "\t"
+        if max_depth and depth == max_depth:
+            buf += pad + "...\n"
+            return buf
+
         buf += pad + self.name() + "\n"
-        buf = self.expr.description(buf, depth+1)
+        buf = self.expr.description(buf, depth+1, max_depth+2)
         if hasattr(self, "left"):
-            buf = self.left.description(buf, depth+1)
+            buf = self.left.description(buf, depth+1, max_depth)
         if hasattr(self, "right"):
-            buf = self.right.description(buf, depth+1)
+            buf = self.right.description(buf, depth+1, max_depth)
         return buf
 
     @failure_info
