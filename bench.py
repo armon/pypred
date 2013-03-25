@@ -7,13 +7,13 @@ from pypred import Predicate, PredicateSet, OptimizedPredicateSet
 def get_words():
     "Returns a large list of words"
     raw = open("/usr/share/dict/words").readlines()
-    return [r.strip() for r in raw]
+    return [r.strip() for r in raw if "'" not in r]
 
 def get_names():
     "Returns a large list of names"
     try:
         raw = open("/usr/share/dict/propernames").readlines()
-        return [r.strip() for r in raw]
+        return [r.strip() for r in raw if "'" not in r]
     except:
         return get_words()
 
