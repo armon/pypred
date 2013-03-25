@@ -7,11 +7,24 @@ then evaluates. The PyPred provides simple APIs to do the evaluation
 is most sitations, but allows for customized evaluation techniques for
 more complex situations.
 
+Additionally, PyPred supports the notion of predicate "sets". This is
+a collection of predicates that are all simultaneously evaluated against
+a single input document. For example, in a Pub/Sub system, each subscription
+can be modeled as a predicate. When a new event arrives, the predicate set
+of all subscriptions can be evaluated to find all matching subscriptions.
+
+PyPred provides a PredicateSet model as well as an OptimizedPredicateSet.
+The optimized variant trades memory for speed. It extracts common
+sub-expressions into a branch, and conditionally executes different sets
+of predicates to prune the predicates that will not match most efficiently.
+The parameters of the optimization can be tweaked to find a speed/memory
+balance.
+
 Grammar
 =======
 
-The grammar that PyPred understands is fairly limited, and is restricted
-to boolean logic.
+The grammar that PyPred understands is limited to simple comparisons
+and boolean logic.
 
 It supports the following:
 
@@ -49,11 +62,10 @@ This checks for any webserver hostname matching a numeric suffix, such as "east-
 API
 ===
 
-Using the pypred package is very simple as well. It has a single primary
-interface, which is the `Predicate` class. It is instantiated with
-a string predicate.
+Predicates themselves have a single interface, which is the `Predicate` class.
+It is instantiated with a string predicate.
 
-The main interface for it is:
+The main API's for it are:
 * Predicate(Pred) : Creates a new predicate object
 
 * Predicate.description(): Returns a human readable version of the tree if valid
@@ -75,6 +87,36 @@ literals. When the AST needs a value to substitute a variable, it calls the
 and support string literals, dictionary lookups, nested dictionaries, and
 call back resolution via `set_resolver`. However, if a client wants to customize
 the resolution of identifier, they can simply override this method.
+
+Predicate Sets have two main interfaces, either the `PredicateSet` or `OptimizedPredicateSet`.
+
+Both share part a subset of their calls:
+
+* Set(preds=None) : Instantiate the set, optionally with a list of predicates
+
+* Set.add(predicate) : Adds a predicate to the set
+
+* Set.update(predicates) : Extends to include a list of predicates
+
+* Set.evaluate(document) : Evaluates the document against the predicates and returns a list of matches
+
+The OptimizedPredicateSet supports an extended set of API's:
+
+* OptSet.description() : Returns ahuman readable version of the optimized tree
+
+* OptSet.analyze(document) : Like Predicate.analyze(), but returns a boolean, a list, and the info dict.
+
+* OptSet.compile\_ast() : Forces compilation of the interal AST
+
+* OptSet.finalize() : Prunes the AST of sub-predicates, and removes any instance data that is not used
+as part of the evaluation of the optimized set. Not usually needed, but can reduce the total memory
+footprint, and is useful if the object is going to be pickled.
+
+The standard PredicateSet relies on the underlying predicates to do
+resolution of literals, however the OptimizedPredicateSet implements
+`resolve_identifier` to do so. Thus if custom behavior is wanted, the
+optimized set must be sub-classed.
+
 
 Human Readable Outputs
 ======================
