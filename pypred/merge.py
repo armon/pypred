@@ -44,6 +44,7 @@ class RefactorSettings():
 
         self.static_rewrite = True
         self.canonicalize = True
+        self.initial_optimize = True
         self.refactor = True
         self.compact = True
 
@@ -133,6 +134,10 @@ def refactor(pred_set, ast, settings=None):
     # Canonicalize the AST
     if settings.canonicalize:
         ast = compare.canonicalize(ast)
+
+    # Do an initial optimization pass for easy wins
+    if settings.initial_optimize:
+        ast = optimize(ast, settings.max_opt_pass, settings.min_change)
 
     # Recursively rebuild the tree to optimize cost
     if settings.refactor:
@@ -327,7 +332,7 @@ def count_patterns():
     p2 = SimplePattern("types:CompareOperator", simple_types, simple_types)
 
     # Handle regex matches
-    p3 = SimplePattern("types:MatchOperator", simple_types, "types:Regex")
+    p3 = SimplePattern("types:MatchOperator", simple_types)
 
     # Handle simple contains
     p4 = SimplePattern("types:ContainsOperator", simple_types, simple_types)
