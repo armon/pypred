@@ -437,3 +437,10 @@ class TestCompare(object):
         assert r.left.right.value == True
         assert ASTPattern(or2).matches(r.right)
 
+    def test_xnor(self):
+        "Test XNOR"
+        assert compare.xnor(True, True)
+        assert compare.xnor(False, False)
+        assert not compare.xnor(True, False)
+        assert not compare.xnor(False, True)
+
