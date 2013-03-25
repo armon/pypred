@@ -97,10 +97,6 @@ def merge(predicates):
     the PushResults node to return the list of matching
     predicates, and Both nodes to combine.
     """
-    # Nothing to do if only given a single predicate
-    if len(predicates) == 1:
-        return predicates[0]
-
     # Merge the AST tree's together first using a tree
     all_asts = [ast.PushResult(p, dup(p.ast)) for p in predicates]
     while len(all_asts) > 1:
@@ -115,7 +111,7 @@ def merge(predicates):
         all_asts = merged
 
     # The root object has everything
-    return  all_asts[0]
+    return all_asts[0]
 
 
 def refactor(pred_set, ast, settings=None):
