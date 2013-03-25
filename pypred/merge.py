@@ -215,6 +215,17 @@ def select_rewrite_expression(name, exprs):
     if name[0] == "CompareOperator":
         return compare.select_rewrite_expression(name, exprs)
 
+    # For negate operators, use the sub-expression
+    elif isinstance(exprs[0], ast.NegateOperator):
+        return exprs[0].left
+
+    # For logical operators, use the Literal sub-expression
+    elif isinstance(exprs[0], ast.LogicalOperator):
+        if isinstance(exprs[0], ast.Literal):
+            return exprs[0].left
+        else:
+            return exprs[0].right
+
     # Use the first expression, as they are all the same
     return exprs[0]
 
