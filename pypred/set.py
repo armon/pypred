@@ -23,9 +23,7 @@ class PredicateSet(object):
 
     def add(self, p):
         "Updates the set with a new predicate"
-        if not p.is_valid():
-            raise ValueError("Invalid predicate provided!")
-        self.predicates.add(p)
+        self.update([p])
 
     def update(self, preds):
         "Update the set with a union of the new predicates"
@@ -65,14 +63,7 @@ class OptimizedPredicateSet(LiteralResolver):
         Updates the set with a new predicate. This will invalidate
         the current AST. It is not recommended to interleave add/evaluate.
         """
-        if not p.is_valid():
-            raise ValueError("Invalid predicate provided!")
-
-        # Add and check if we need to invalidate the ast
-        old_l = len(self.predicates)
-        self.predicates.add(p)
-        if len(self.predicates) != old_l:
-            self.ast = None
+        self.update([p])
 
     def update(self, preds):
         "Update the set with a union of the new predicates"
@@ -84,6 +75,12 @@ class OptimizedPredicateSet(LiteralResolver):
         self.predicates.update(preds)
         if len(self.predicates) != old_l:
             self.ast = None
+
+    def description(self, max_depth=0):
+        "Provides a tree like human readable description of the predicate"
+        if self.ast is None:
+            self.compile_ast()
+        return self.ast.description(max_depth=max_depth)
 
     def evaluate(self, doc):
         """
@@ -103,6 +100,33 @@ class OptimizedPredicateSet(LiteralResolver):
         # Reset the results array and return this instance
         self._results = None
         return results
+
+    def analyze(self, document):
+        """
+        Evaluates a predicate against the input document,
+        while trying to provide additional information about
+        the cause of failure. This is generally much slower
+        that using the equivilent `evaluate`.
+
+        Returns a tuple of (Result, Matches, Info).
+        Result is a boolean, Matches a list of predices
+        and info is a dictionary containing "failed" and "literals".
+        The failed key has all the failure reasons in order.
+        The literals dict contains the resolved values for all literals.
+        """
+        if self.ast is None:
+            self.compile_ast()
+
+        # Set the results array so that the ast can push the matches
+        results = []
+        self._results = results
+
+        # Analyze
+        res, info  = self.ast.analyze(self, document)
+
+        # Reset the results array and return this instance
+        self._results = None
+        return res, results, info
 
     def compile_ast(self):
         """
