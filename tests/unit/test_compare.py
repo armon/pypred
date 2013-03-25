@@ -401,3 +401,39 @@ class TestCompare(object):
         assert isinstance(r.right.right, ast.Constant)
         assert r.right.right.value == False
 
+    def test_order_rewrite_literal(self):
+        "Tests rewrite of literal values"
+        # Model the predicate:
+        # foo < bar or foo >= bar or foo > zip or foo <= zip
+        l = ast.Literal('foo')
+        v = ast.Literal('bar')
+        v2 = ast.Literal('zip')
+
+        cmp1 = ast.CompareOperator('<', l, v)
+        cmp2 = ast.CompareOperator('>=', l, v)
+        cmp3 = ast.CompareOperator('>', l, v2)
+        cmp4 = ast.CompareOperator('<=', l, v2)
+        or1 = ast.LogicalOperator('or', cmp1, cmp2)
+        or2 = ast.LogicalOperator('or', cmp3, cmp4)
+        or3 = ast.LogicalOperator('or', or1, or2)
+
+        # Rewrite foo < bar as True
+        name = merge.node_name(cmp1, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp1, True)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == True
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == False
+        assert ASTPattern(or2).matches(r.right)
+
+        # Rewrite foo < bar as False
+        name = merge.node_name(cmp1, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp1, False)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == False
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == True
+        assert ASTPattern(or2).matches(r.right)
+
