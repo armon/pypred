@@ -11,8 +11,11 @@ def get_words():
 
 def get_names():
     "Returns a large list of names"
-    raw = open("/usr/share/dict/propernames").readlines()
-    return [r.strip() for r in raw]
+    try:
+        raw = open("/usr/share/dict/propernames").readlines()
+        return [r.strip() for r in raw]
+    except:
+        return get_words()
 
 NAMES = get_names()
 WORDS = get_words()
