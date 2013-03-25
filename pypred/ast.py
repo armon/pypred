@@ -189,7 +189,7 @@ class NegateOperator(Node):
 class CompareOperator(Node):
     "Used for all the mathematical comparisons"
     OP_REVERSE = {
-            ">=": "=<", # a >= b -> b =< a
+            ">=": "<=", # a >= b -> b =< a
             ">": "<",   # a > b  -> b < a
             "<": ">",   # a < b  -> b > a
             "<=": ">=", # a <= b -> b >= a
