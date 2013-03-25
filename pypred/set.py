@@ -55,6 +55,7 @@ class OptimizedPredicateSet(LiteralResolver):
         self.settings = settings
         self.predicates = set([])
         self.ast = None
+        self.finalized = False
         if preds:
             self.update(preds)
 
@@ -67,6 +68,9 @@ class OptimizedPredicateSet(LiteralResolver):
 
     def update(self, preds):
         "Update the set with a union of the new predicates"
+        if self.finalized:
+            raise Exception("Cannot alter a finalized set!")
+
         for p in preds:
             if not p.is_valid():
                 raise ValueError("Invalid predicate provided!")
@@ -134,6 +138,8 @@ class OptimizedPredicateSet(LiteralResolver):
         This must be done after any changes to the set of
         predicates.
         """
+        if self.finalized:
+            raise Exception("Cannot compile a finalized set!")
         merged = merge(list(self.predicates))
         self.ast = refactor(self, merged, self.settings)
 
@@ -143,4 +149,28 @@ class OptimizedPredicateSet(LiteralResolver):
         to push results during an evaluation.
         """
         self._results.append(match)
+
+    def finalize(self):
+        """
+        This method can be invoked to 'finalize'. Once
+        this is done, the set cannot be altered. However,
+        lots of extraneous data can be purged to save memory.
+
+        This WILL clear the predicate string and AST from all
+        input predicates. Use only with caution.
+        """
+        # Ensure the AST if compiled first
+        if self.ast is None:
+            self.compile_ast()
+
+        # Clear the sub-AST's and string predicates
+        for p in self.predicates:
+            p.predicate = None
+            p.ast = None
+
+        # Remove our set, the AST has it
+        self.predicates = None
+
+        # Set as finalized
+        self.finalized = True
 
