@@ -63,9 +63,18 @@ def select_rewrite_expression(name, exprs):
                 return e
 
     # For ordering checks, select the median value for static
-    elif name[1] == "order" and name[3][1] == "static":
+    elif name[1] == "order":
+        is_static = name[3][1] == "static"
         values = [e.right.value for e in exprs]
-        filter_using = util.median(values)
+
+        # For static (numeric) compares, we use median
+        # value to eliminate as many as possible.
+        # For non-numeric, we use mode
+        if is_static:
+            filter_using = util.median(values)
+        else:
+            filter_using = util.mode(values)
+
         for e in exprs:
             if e.right.value == filter_using:
                 return e
@@ -128,7 +137,7 @@ def equality_rewrite(node, name, expr, assumed_result):
         elif static_match:
             if node.type in EQUALITY:
                 const = known
-            elif node.type in INEQUALITY:
+            else:
                 const = not known
 
         # If we can't do a rewrite, just skip this node
