@@ -173,11 +173,11 @@ class Predicate(LiteralResolver):
         }
         return info
 
-    def description(self):
+    def description(self, max_depth=0):
         "Provides a tree like human readable description of the predicate"
         if not self.is_valid():
             raise InvalidPredicate
-        return self.ast.description()
+        return self.ast.description(max_depth=max_depth)
 
     def evaluate(self, document):
         "Evaluates the predicate against the document."
