@@ -8,7 +8,7 @@ we can safely rewrite that as a constant.
 """
 import ast
 import util
-from tiler import SimplePattern, tile
+from tiler import ASTPattern, SimplePattern, tile
 
 EQUALITY = ("=", "is")
 INEQUALITY = ("!=",)
@@ -91,63 +91,47 @@ def compare_rewrite(node, name, expr, assumed_result):
 
 def equality_rewrite(node, name, expr, assumed_result):
     # Get the literal and static compare values
-    literal = expr.left.value
     static_value = expr.right.value
     is_static = expr.right.static
 
     # Do we 'know' the value to be something
     # specific, or can we just eliminate a possible value.
     if expr.type in EQUALITY:
-        known = True
+        known = assumed_result
     else:
-        known = False
-
-    if not assumed_result:
-        known = not known
+        known = not assumed_result
 
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
-        # Ignore if not an equality check
-        if node.type not in ("=", "!=", "is"):
-            return None
-
-        # Ignore if no match on the literal
-        if node.left.value != literal:
-            return None
-
         # Do the static comparison
         static_match = node.right.value == static_value
-
-        # If we are refactoring equality on a non-static
-        # variable, then we have a limit set of rewrites.
-        # for example, if a = b, then a = c could also be true,
-        # since b = c is possible.
-        const = None
-        if not is_static:
-            # a = b , a = b. a = c could also be true!
-            if node.type in EQUALITY and static_match:
-                const = known
-
-            # a != b, a != b
-            elif node.type in INEQUALITY and static_match:
-                const = not known
+        is_static_node = node.right.static
 
         # If we are refactoring equality on a static
         # variable, then we can statically perform the comparisons
         # and do more aggressive rewrites of the AST.
-        else:
+        const = None
+        if known and is_static and is_static_node:
             if node.type in EQUALITY:
                 const = static_match
             else:
                 const = not static_match
 
+        # If we are refactoring equality on a non-static
+        # variable, then we have a limit set of rewrites.
+        # for example, if a = b, then a = c could also be true,
+        # since b = c is possible.
+        elif static_match:
+            if node.type in EQUALITY:
+                const = known
+            elif node.type in INEQUALITY:
+                const = not known
+
         # If we can't do a rewrite, just skip this node
-        if const is None:
-            return None
-        return ast.Constant(const)
+        return ast.Constant(const) if const is not None else None
 
     # Tile to replace
-    pattern = SimplePattern("types:CompareOperator", "types:Literal")
+    pattern = SimplePattern("types:CompareOperator AND ops:=,!=,is", ASTPattern(expr.left))
     return tile(node, [pattern], replace_func)
 
 
@@ -170,7 +154,6 @@ def order_rewrite(node, name, expr, assumed_result):
       * b <= a is True
     """
     # Get the literal and static compare values
-    literal = expr.left.value
     static_value = expr.right.value
     numeric = isinstance(expr.right, ast.Number)
 
@@ -183,14 +166,6 @@ def order_rewrite(node, name, expr, assumed_result):
 
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
-        # Ignore if not an ordering check
-        if node.type not in ("<", "<=", ">", ">="):
-            return None
-
-        # Ignore if no match on the literal
-        if node.left.value != literal:
-            return None
-
         node_val = node.right.value
         if not numeric and node_val != static_value:
             return None
@@ -260,8 +235,9 @@ def order_rewrite(node, name, expr, assumed_result):
 
         return ast.Constant(const)
 
+
     # Tile to replace
-    pattern = SimplePattern("types:CompareOperator",
-            "types:Literal", "types:Number" if numeric else "types:Literal")
+    pattern = SimplePattern("types:CompareOperator AND ops:<,<=,>,>=",
+            ASTPattern(expr.left), "types:Number" if numeric else "types:Literal")
     return tile(node, [pattern], replace_func)
 

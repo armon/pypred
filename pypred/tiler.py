@@ -12,7 +12,7 @@ class Pattern(object):
         "Returns if the current node matches the pattern"
         return True
 
-class ASTPattern(object):
+class ASTPattern(Pattern):
     "Implements AST based pattern"
     def __init__(self, ast):
         self.ast = ast
@@ -37,7 +37,7 @@ class ASTPattern(object):
             return False
         return True
 
-class SimplePattern(object):
+class SimplePattern(Pattern):
     "Implements a simple DSL for patterns"
     def __init__(self, node_p, left_p=None, right_p=None):
         """
@@ -47,11 +47,13 @@ class SimplePattern(object):
         patters in the form of:
         * types:ASTType1,ASTType2
         * op:NodeType
+        * ops:Op1,Op2
         * value:ValueStr
         * AND
 
         As an example, a pattern like:
         types:CompareOperator AND op:=
+        types:CompareOperator AND ops:=,>,>=
 
         Will match a comparison operator which checks for equality.
         """
@@ -71,6 +73,10 @@ class SimplePattern(object):
 
     @classmethod
     def _check_pattern(cls, pattern, node):
+        # Support sub-classes of pattern
+        if isinstance(pattern, Pattern):
+            return pattern.matches(node)
+
         clauses = pattern.split(" AND ")
         for clause in clauses:
             # Check the node type
@@ -83,6 +89,12 @@ class SimplePattern(object):
             elif clause.startswith("op:"):
                 op = clause[3:]
                 if cls.node_op(node) != op:
+                    return False
+
+            # Check the node ops
+            elif clause.startswith("ops:"):
+                ops = clause[4:].split(",")
+                if cls.node_op(node) not in ops:
                     return False
 
             # Check the node op
