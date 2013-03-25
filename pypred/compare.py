@@ -148,17 +148,41 @@ def equality_rewrite(node, name, expr, assumed_result):
     return tile(node, [pattern], replace_func)
 
 
+def xnor(a, b):
+    "XNOR operator. Both A and B are False, or both are True"
+    return not (a ^ b)
+
 def order_rewrite(node, name, expr, assumed_result):
     # Get the literal and static compare values
     static_value = expr.right.value
     numeric = isinstance(expr.right, ast.Number)
 
-    # Based on the assumed result
+    # Based on the assumed result get the upper/lower bounds
     less_than = "<" in expr.type
     maybe_equals = "=" in expr.type
-    if not assumed_result:
-        less_than = not less_than
-        maybe_equals = not maybe_equals
+    if less_than:
+        if assumed_result:
+            min_bound = float("-inf")
+            min_incl = False
+            max_bound = static_value
+            max_incl = maybe_equals
+        else:
+            min_bound = static_value
+            min_incl = not maybe_equals
+            max_bound = float("inf")
+            max_incl = False
+    else:
+        if assumed_result:
+            min_bound = static_value
+            min_incl = maybe_equals
+            max_bound = float("inf")
+            max_incl = False
+        else:
+            min_bound = float("-inf")
+            min_incl = False
+            max_bound = static_value
+            max_incl = not maybe_equals
+
 
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
@@ -180,50 +204,57 @@ def order_rewrite(node, name, expr, assumed_result):
         else:
             # Some cases cannot be re-written
             const = None
+            if assert_less:
+                # a < c, c > b iff a < b
+                if node_val > max_bound:
+                    const = True
 
-            if less_than and assert_less:
-                # a <= b, a < c -> c > b
-                if maybe_equals and not assert_equals:
-                    if node_val > static_value:
-                        const = True
+                # a <= c, c = b iff a <= b
+                # a < c, c = b iff a < b
+                elif node_val == max_bound and \
+                        xnor(max_incl, assert_equals):
+                    const = True
 
-                # a < b, a < c -> c >= b
-                else:
-                    if node_val >= static_value:
-                        const = True
+                # a < 5, a > 6
+                elif node_val < min_bound:
+                    const = False
 
-            elif not less_than and not assert_less:
-                # a >=b, a > c -> c < b
-                if maybe_equals and not assert_equals:
-                    if node_val < static_value:
-                        const = True
+                # a < 5, a > 5
+                # a < 5, a >= 5
+                elif node_val == min_bound and not assert_equals:
+                    const = False
 
-                # a > b, a > c -> c <= b
-                else:
-                    if node_val <= static_value:
-                        const = True
+                # a <= 5, a > 5
+                # a <= 5, a >= 5 UNKNOWN!
+                elif node_val == min_bound and assert_equals and \
+                    not min_incl:
+                    const = False
 
-            elif less_than and not assert_less:
-                # a <= b, a > c -> iff c > b False
-                if maybe_equals and not assert_equals:
-                    if node_val > static_value:
-                        const = False
+            else:
+                # a > c, c < b iff a > b
+                if node_val < min_bound:
+                    const = True
 
-                # a < b, a >= c -> iff c >= b False
-                else:
-                    if node_val >= static_value:
-                        const = False
+                # a >= c, c = b iff a >= b
+                # a > c, c = b iff a > b
+                elif node_val == min_bound and \
+                        xnor(min_incl, assert_equals):
+                    const = True
 
-            elif not less_than and assert_less:
-                # a >= b, a < c -> iff c < b True
-                if maybe_equals and not assert_equals:
-                    if node_val < static_value:
-                        const = False
+                # a > c, c > b iff a < b
+                elif node_val > max_bound:
+                    const = False
 
-                # a > b, a <= c -> iff c <= b False
-                else:
-                    if node_val <= static_value:
-                        const = False
+                # a > 5, a < 5
+                # a > 5, a <= 5
+                elif node_val == max_bound and not assert_equals:
+                    const = False
+
+                # a >= 5, a < 5
+                # a >= 5, a <= 5 UNKNOWN!
+                elif node_val == max_bound and assert_equals and \
+                    not max_incl:
+                    const = False
 
         # No replacement in some situations
         if const is None:
