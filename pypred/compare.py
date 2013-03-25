@@ -149,23 +149,6 @@ def equality_rewrite(node, name, expr, assumed_result):
 
 
 def order_rewrite(node, name, expr, assumed_result):
-    """
-    IFF
-    a > b is True:
-      * a < b is False
-      * a <= b is False
-
-      * b > a is False
-      * b >= a is False
-
-      * b < a is True
-      * b <= a is True
-
-    a >= b is True:
-      * a < b is False
-      * b > a is False
-      * b <= a is True
-    """
     # Get the literal and static compare values
     static_value = expr.right.value
     numeric = isinstance(expr.right, ast.Number)
