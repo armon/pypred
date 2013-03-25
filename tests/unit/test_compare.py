@@ -290,3 +290,114 @@ class TestCompare(object):
         assert isinstance(r.right, ast.Constant)
         assert r.right.value == False
 
+    def test_order_rewrite_numeric(self):
+        "Tests rewrite of numeric values"
+        # Model the predicate:
+        # foo < 25 or foo >= 50 or foo > 75 or foo <= 100
+        l = ast.Literal('foo')
+        v = ast.Number(25)
+        v1 = ast.Number(50)
+        v2 = ast.Number(75)
+        v3 = ast.Number(100)
+        cmp1 = ast.CompareOperator('<', l, v)
+        cmp2 = ast.CompareOperator('>=', l, v1)
+        cmp3 = ast.CompareOperator('>', l, v2)
+        cmp4 = ast.CompareOperator('<=', l, v3)
+        or1 = ast.LogicalOperator('or', cmp1, cmp2)
+        or2 = ast.LogicalOperator('or', cmp3, cmp4)
+        or3 = ast.LogicalOperator('or', or1, or2)
+
+        # Rewrite foo < 25 as true
+        name = merge.node_name(cmp1, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp1, True)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == True
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == False
+        assert isinstance(r.right.left, ast.Constant)
+        assert r.right.left.value == False
+        assert isinstance(r.right.right, ast.Constant)
+        assert r.right.right.value == True
+
+        # Rewrite foo < 25 as false
+        name = merge.node_name(cmp1, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp1, False)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == False
+
+        # other cmps unchanges
+        assert ASTPattern(cmp2).matches(r.left.right)
+        assert ASTPattern(cmp3).matches(r.right.left)
+        assert ASTPattern(cmp4).matches(r.right.right)
+
+        # Rewrite foo >= 50 as true
+        name = merge.node_name(cmp2, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp2, True)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == False
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == True
+        assert ASTPattern(cmp3).matches(r.right.left)
+        assert ASTPattern(cmp4).matches(r.right.right)
+
+        # Rewrite foo >= 50 as false
+        name = merge.node_name(cmp2, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp2, False)
+
+        assert ASTPattern(cmp1).matches(r.left.left)
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == False
+        assert isinstance(r.right.left, ast.Constant)
+        assert r.right.left.value == False
+        assert isinstance(r.right.right, ast.Constant)
+        assert r.right.right.value == True
+
+        # Rewrite foo > 75 as true
+        name = merge.node_name(cmp3, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp3, True)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == False
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == True
+        assert isinstance(r.right.left, ast.Constant)
+        assert r.right.left.value == True
+        assert ASTPattern(cmp4).matches(r.right.right)
+
+        # Rewrite foo > 75 as False
+        name = merge.node_name(cmp3, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp3, False)
+
+        assert ASTPattern(cmp1).matches(r.left.left)
+        assert ASTPattern(cmp2).matches(r.left.right)
+        assert isinstance(r.right.left, ast.Constant)
+        assert r.right.left.value == False
+        assert isinstance(r.right.right, ast.Constant)
+        assert r.right.right.value == True
+
+        # Rewrite foo <= 100 as True
+        name = merge.node_name(cmp4, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp4, True)
+
+        assert ASTPattern(cmp1).matches(r.left.left)
+        assert ASTPattern(cmp2).matches(r.left.right)
+        assert ASTPattern(cmp3).matches(r.right.left)
+        assert isinstance(r.right.right, ast.Constant)
+        assert r.right.right.value == True
+
+        # Rewrite foo <= 100 as False
+        name = merge.node_name(cmp4, True)
+        r = compare.order_rewrite(ast.dup(or3), name, cmp4, False)
+
+        assert isinstance(r.left.left, ast.Constant)
+        assert r.left.left.value == False
+        assert isinstance(r.left.right, ast.Constant)
+        assert r.left.right.value == True
+        assert isinstance(r.right.left, ast.Constant)
+        assert r.right.left.value == True
+        assert isinstance(r.right.right, ast.Constant)
+        assert r.right.right.value == False
+
