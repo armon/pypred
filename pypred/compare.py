@@ -183,6 +183,9 @@ def order_rewrite(node, name, expr, assumed_result):
             max_bound = static_value
             max_incl = not maybe_equals
 
+    if not assumed_result:
+        less_than = not less_than
+        maybe_equals = not maybe_equals
 
     # Replace function to handle AST re-writes
     def replace_func(pattern, node):
