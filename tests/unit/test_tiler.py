@@ -1,6 +1,30 @@
 from pypred import ast, tiler
 
 class TestTiler(object):
+    def test_pattern_match(self):
+        p = tiler.Pattern()
+        assert p.matches(None)
+
+    def test_ast_pattern(self):
+        l = ast.Literal('foo')
+        b = ast.Literal('bar')
+        c = ast.CompareOperator('is', l, b)
+        p = tiler.ASTPattern(c)
+        assert p.matches(c)
+
+        # Change a node
+        z = ast.Number(42)
+        c1 = ast.CompareOperator('is', l, z)
+        assert not p.matches(c1)
+
+    def test_simple_sub_pattern(self):
+        l = ast.Literal('foo')
+        r = ast.Regex('^tubez$')
+        n = ast.MatchOperator(l, r)
+        p = tiler.SimplePattern('types:MatchOperator',
+                tiler.ASTPattern(l), 'types:Regex')
+        assert p.matches(n)
+
     def test_simple_pattern_type(self):
         l = ast.Literal('foo')
         r = ast.Regex('^tubez$')
@@ -9,11 +33,27 @@ class TestTiler(object):
                 'types:Literal', 'types:Regex')
         assert p.matches(n)
 
+    def test_simple_pattern_value(self):
+        l = ast.Literal('foo')
+        r = ast.Constant(True)
+        n = ast.CompareOperator('=', l, r)
+        p = tiler.SimplePattern('types:CompareOperator AND ops:=',
+                'types:Literal', 'types:Constant AND value:True')
+        assert p.matches(n)
+
     def test_simple_pattern_op(self):
         l = ast.Literal('foo')
         r = ast.Literal('foo')
         n = ast.CompareOperator('=', l, r)
         p = tiler.SimplePattern('op:=',
+                'types:Literal', 'types:Literal')
+        assert p.matches(n)
+
+    def test_simple_pattern_ops(self):
+        l = ast.Literal('foo')
+        r = ast.Literal('foo')
+        n = ast.CompareOperator('<=', l, r)
+        p = tiler.SimplePattern('ops:>,>=,<,<=',
                 'types:Literal', 'types:Literal')
         assert p.matches(n)
 
