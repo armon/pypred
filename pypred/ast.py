@@ -120,7 +120,7 @@ class Node(object):
         given predicate and provides a dictionary with detailed
         information about the evaluate and failure reasons
         """
-        info = {"failed":[], "literals": {}}
+        info = {"failed":[], "literals": {}, "reach":0}
         res = bool(self.eval(pred, document, info))
         return res, info
 
@@ -522,11 +522,18 @@ class PushResult(Node):
     def name(self):
         return "PushResult of '%s'" % self.pred.predicate
 
+    @failure_info
     def eval(self, pred, doc, info=None):
+        if info:
+            info["reach"] += 1
         if self.left.eval(pred, doc, info):
             pred.push_match(self.pred)
             return True
         return False
+
+    def failure_info(self, pred, doc, info):
+        err = "Predicate '%s' failed to match" % self.pred.predicate
+        info["failed"].append(err)
 
 
 class Branch(Node):
