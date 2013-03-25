@@ -76,12 +76,12 @@ def optimization_patterns():
     p6 = SimplePattern("types:NegateOperator", "types:Constant AND value:False")
     p6.replacement = ast.Constant(True)
 
-    # Remove a no-op push result
-    p7 = SimplePattern("types:PushResult", "types:Constant AND value:False")
+    # Remove Both nodes when possible
+    p7 = SimplePattern("types:Both", "types:Constant AND value:False", "types:Constant AND value:False")
     p7.replacement = ast.Constant(False)
 
-    # Remove Both nodes when possible
-    p8 = SimplePattern("types:Both", "types:Constant AND value:False", "types:Constant AND value:False")
+    # Remove a no-op push result
+    p8 = SimplePattern("types:PushResult", "types:Constant AND value:False")
     p8.replacement = ast.Constant(False)
 
     # Special pattern that replaces Both with one of the children
