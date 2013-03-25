@@ -76,12 +76,12 @@ def optimization_patterns():
     p6 = SimplePattern("types:NegateOperator", "types:Constant AND value:False")
     p6.replacement = ast.Constant(True)
 
-    # Remove Both nodes when possible
-    p7 = SimplePattern("types:Both", "types:Constant AND value:False", "types:Constant AND value:False")
+    # Remove a no-op push result
+    p7 = SimplePattern("types:PushResult", "types:Constant AND value:False")
     p7.replacement = ast.Constant(False)
 
-    # Remove a no-op push result
-    p8 = SimplePattern("types:PushResult", "types:Constant AND value:False")
+    # Remove Both nodes when possible
+    p8 = SimplePattern("types:Both", "types:Constant AND value:False", "types:Constant AND value:False")
     p8.replacement = ast.Constant(False)
 
     # Special pattern that replaces Both with one of the children
@@ -90,7 +90,10 @@ def optimization_patterns():
     # Remove logical operators when the short-circuit path is useless
     p10 = ShortCircuitLogicalPattern()
 
-    CACHE_PATTERNS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
+    # Remove dead branches
+    p11 = DeadBranchPattern()
+
+    CACHE_PATTERNS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11]
     return CACHE_PATTERNS
 
 
@@ -158,4 +161,24 @@ class ShortCircuitLogicalPattern(Pattern):
         if r:
             return r
         raise Exception("No valid replacement!")
+
+
+class DeadBranchPattern(Pattern):
+    """
+    This pattern detects when there is a dead branch that
+    is unreachable. It replaces it with the proper live branch.
+    """
+    def matches(self, node):
+        if not isinstance(node, ast.Branch):
+            return False
+
+        # Check for a constant expression
+        return isinstance(node.expr, ast.Constant)
+
+    def replacement(self, node):
+        branch = node.expr.value
+        if branch:
+            return node.left if node.left else ast.Constant(False)
+        else:
+            return node.right if node.right else ast.Constant(False)
 
