@@ -221,7 +221,7 @@ def select_rewrite_expression(name, exprs):
 
     # For logical operators, use the Literal sub-expression
     elif isinstance(exprs[0], ast.LogicalOperator):
-        if isinstance(exprs[0], ast.Literal):
+        if isinstance(exprs[0].left, ast.Literal):
             return exprs[0].left
         else:
             return exprs[0].right
