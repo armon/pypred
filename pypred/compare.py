@@ -148,10 +148,6 @@ def equality_rewrite(node, name, expr, assumed_result):
     return tile(node, [pattern], replace_func)
 
 
-def xnor(a, b):
-    "XNOR operator. Both A and B are False, or both are True"
-    return not (a ^ b)
-
 def order_rewrite(node, name, expr, assumed_result):
     # Get the literal and static compare values
     static_value = expr.right.value
@@ -213,9 +209,13 @@ def order_rewrite(node, name, expr, assumed_result):
                     const = True
 
                 # a <= c, c = b iff a <= b
-                # a < c, c = b iff a < b
-                elif node_val == max_bound and \
-                        xnor(max_incl, assert_equals):
+                # a < c, c = b iff a <= b UNKNOWN!
+                elif node_val == max_bound and max_incl and assert_equals:
+                    const = True
+
+                # a < c, c == b, a < b
+                # a <= c, c == b, a < b
+                elif node_val == max_bound and not max_incl:
                     const = True
 
                 # a < 5, a > 6
@@ -238,10 +238,14 @@ def order_rewrite(node, name, expr, assumed_result):
                 if node_val < min_bound:
                     const = True
 
-                # a >= c, c = b iff a >= b
+                # a >= c, c = b iff a > b
                 # a > c, c = b iff a > b
-                elif node_val == min_bound and \
-                        xnor(min_incl, assert_equals):
+                elif node_val == min_bound and not min_incl:
+                    const = True
+
+                # a >= c, c = b iff a >= b
+                # a > c, c = b iff a >= b UNKNOWN!
+                elif node_val == min_bound and min_incl and assert_equals:
                     const = True
 
                 # a > c, c > b iff a < b
