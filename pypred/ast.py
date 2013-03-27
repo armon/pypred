@@ -348,10 +348,7 @@ class Regex(Node):
         self.re = None
 
     def __deepcopy__(self, memo=None):
-        r = Regex(self.value)
-        r.position = self.position
-        r.re = self.re
-        return r
+        return self
 
     def name(self):
         return "Regex %s at %s" % (repr(self.value), self.position)
@@ -388,6 +385,9 @@ class Literal(Node):
 
     def __init__(self, value):
         self.value = value
+
+    def __deepcopy__(self, memo=None):
+        return self
 
     def name(self):
         return "Literal %s at %s" % (self.value, self.position)
@@ -428,6 +428,9 @@ class Number(Node):
         except:
             self.value = value
 
+    def __deepcopy__(self, memo=None):
+        return self
+
     def name(self):
         return "Number %f at %s" % (self.value, self.position)
 
@@ -448,6 +451,9 @@ class Constant(Node):
     def __init__(self, value):
         self.value = value
 
+    def __deepcopy__(self, memo=None):
+        return self
+
     def name(self):
         return "Constant %s at %s" % (self.value, self.position)
 
@@ -467,6 +473,9 @@ class Undefined(Node):
     "Represents a non-defined object"
     def __init__(self):
         return
+
+    def __deepcopy__(self, memo=None):
+        return self
 
     def __nonzero__(self):
         "Acts like False"
@@ -497,6 +506,9 @@ class Empty(Node):
     def __init__(self):
         return
 
+    def __deepcopy__(self, memo=None):
+        return self
+
     def __nonzero__(self):
         "Acts like False"
         return False
@@ -518,6 +530,10 @@ class PushResult(Node):
     def __init__(self, predicate, ast):
         self.pred = predicate
         self.left = ast
+
+    def __deepcopy__(self, memo=None):
+        # Do not copy the predicate
+        return PushResult(self.pred, dup(self.left))
 
     def name(self):
         return "PushResult of '%s'" % self.pred.predicate
