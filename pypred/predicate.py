@@ -153,31 +153,34 @@ class Predicate(LiteralResolver):
         errors = []
 
         # Add the lexer errors in a friendly way
-        for char, pos, line in self.lexer_errors:
-            e = "Failed to parse characters %s at line %d, col %d" % \
-                    (char, pos, line)
-            errors.append(e)
+        if self.lexer_errors:
+            for char, pos, line in self.lexer_errors:
+                e = "Failed to parse characters %s at line %d, col %d" % \
+                        (char, pos, line)
+                errors.append(e)
 
         # Add the parser errors in a friendly way
-        for err in self.parser_errors:
-            if isinstance(err, tuple) and len(err) == 5:
-                _, _, val, pos, line = err
-                e = "Syntax error with %s at line %d, col %d" % \
-                    (val, pos, line)
-                errors.append(e)
-            elif isinstance(err, str):
-                errors.append(err)
-            else:
-                errors.append(repr(err))
+        if self.parser_errors:
+            for err in self.parser_errors:
+                if isinstance(err, tuple) and len(err) == 5:
+                    _, _, val, pos, line = err
+                    e = "Syntax error with %s at line %d, col %d" % \
+                        (val, pos, line)
+                    errors.append(e)
+                elif isinstance(err, str):
+                    errors.append(err)
+                else:
+                    errors.append(repr(err))
 
         # Copy the ast errors
-        for err in self.ast_errors["errors"]:
-            errors.append(err)
+        if self.ast_errors:
+            for err in self.ast_errors["errors"]:
+                errors.append(err)
 
         # Build info dict
         info = {
             "errors": errors,
-            "regex": self.ast_errors["regex"]
+            "regex": self.ast_errors["regex"] if self.ast_errors else []
         }
         return info
 
