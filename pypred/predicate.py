@@ -117,12 +117,18 @@ class Predicate(LiteralResolver):
             self.ast = p.parse(self.predicate, lexer=lexer)
             self.ast_validated = False
             self.ast_valid = False
-            self.ast_errors = {"errors": [], "regex": {}}
+            self.ast_errors = None
         except Exception, e:
             self.ast = None
             self.ast_validated = True
             self.ast_valid = False
             self.ast_errors = {"errors": [str(e)], "regex": {}}
+
+        # Clear the error lists if empty
+        if not self.lexer_errors:
+            self.lexer_errors = None
+        if not self.parser_errors:
+            self.parser_errors = None
 
     def is_valid(self):
         "Checks if the predicate is valid"
@@ -138,6 +144,8 @@ class Predicate(LiteralResolver):
         # Valid the AST once
         self.ast_validated = True
         self.ast_valid, self.ast_errors = self.ast.validate()
+        if self.ast_valid:
+            self.ast_errors = None
         return self.ast_valid
 
     def errors(self):
