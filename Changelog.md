@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 (unreleased)
+
+* Optimizations for memory utilization
+* Input predicates are no longer deep copied (bug fix)
+
 ## 0.2.0
 
 * Added `PredicateSet` and `OptimizedPredicateSet` for evaluation
