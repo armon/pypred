@@ -8,6 +8,7 @@ implementation.
 """
 from merge import merge, refactor
 from predicate import LiteralResolver
+import ast
 
 
 class PredicateSet(object):
@@ -140,8 +141,11 @@ class OptimizedPredicateSet(LiteralResolver):
         """
         if self.finalized:
             raise Exception("Cannot compile a finalized set!")
-        merged = merge(list(self.predicates))
-        self.ast = refactor(self, merged, self.settings)
+        if self.predicates:
+            merged = merge(list(self.predicates))
+            self.ast = refactor(self, merged, self.settings)
+        else:
+            self.ast = ast.Constant(True)
 
     def push_match(self, match):
         """
