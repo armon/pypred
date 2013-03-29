@@ -4,6 +4,7 @@
 
 * Optimizations for memory utilization
 * Input predicates are no longer deep copied (bug fix)
+* Fix bug with compiling an empty set
 
 ## 0.2.0
 
