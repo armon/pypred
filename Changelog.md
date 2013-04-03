@@ -1,10 +1,11 @@
 # Changelog
 
-## 0.2.1 (unreleased)
+## 0.2.1
 
 * Optimizations for memory utilization
 * Input predicates are no longer deep copied (bug fix)
 * Fix bug with compiling an empty set
+* SHA: f645507
 
 ## 0.2.0
 
