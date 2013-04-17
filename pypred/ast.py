@@ -182,8 +182,16 @@ class NegateOperator(Node):
     def __init__(self, expr):
         self.left = expr
 
+    def name(self):
+        return "not operator at %s" % (self.position)
+
+    @failure_info
     def eval(self, pred, doc, info=None):
         return not self.left.eval(pred, doc, info)
+
+    def failure_info(self, pred, doc, info):
+        err = self.name() + " failed because sub-expression %s is true" % self.left.name()
+        info["failed"].append(err)
 
 
 class CompareOperator(Node):
