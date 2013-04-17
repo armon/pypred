@@ -1,4 +1,4 @@
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from merge import RefactorSettings
 from predicate import Predicate, InvalidPredicate
