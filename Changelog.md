@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+* NegateOperator provides failure information
+* SHA: dd79246
+
 ## 0.2.1
 
 * Optimizations for memory utilization
