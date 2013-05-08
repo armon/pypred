@@ -97,84 +97,84 @@ class TestAST(object):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('and', l, r)
-        res, info = a.analyze(MockPred(), {"l": True, "r": False})
+        res, ctx = a.analyze(MockPred(), {"l": True, "r": False})
         assert not res
-        assert info["literals"]["l"] == True
-        assert info["literals"]["r"] == False
-        assert "Right hand side of AND operator at" in info["failed"][0]
+        assert ctx.literals["l"] == True
+        assert ctx.literals["r"] == False
+        assert "Right hand side of AND operator at" in ctx.failed[0]
 
     def test_logical_eval2(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('and', l, r)
-        res, info = a.analyze(MockPred(), {"l": True, "r": True})
+        res, ctx = a.analyze(MockPred(), {"l": True, "r": True})
         assert res
-        assert info["literals"]["l"] == True
-        assert info["literals"]["r"] == True
+        assert ctx.literals["l"] == True
+        assert ctx.literals["r"] == True
 
     def test_logical_eval3(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('or', l, r)
-        res, info = a.analyze(MockPred(), {"l": False, "r": False})
+        res, ctx = a.analyze(MockPred(), {"l": False, "r": False})
         assert not res
-        assert info["literals"]["l"] == False
-        assert info["literals"]["r"] == False
-        assert "Both sides of OR operator at" in info["failed"][0]
+        assert ctx.literals["l"] == False
+        assert ctx.literals["r"] == False
+        assert "Both sides of OR operator at" in ctx.failed[0]
 
     def test_logical_eval4(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('or', l, r)
-        res, info = a.analyze(MockPred(), {"l": False, "r": True})
+        res, ctx = a.analyze(MockPred(), {"l": False, "r": True})
         assert res
-        assert info["literals"]["l"] == False
-        assert info["literals"]["r"] == True
+        assert ctx.literals["l"] == False
+        assert ctx.literals["r"] == True
 
     def test_logical_eval5(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('or', l, r)
-        res, info = a.analyze(MockPred(), {"l": False})
+        res, ctx = a.analyze(MockPred(), {"l": False})
         assert not res
-        assert info["literals"]["l"] == False
-        assert info["literals"]["r"] == ast.Undefined()
-        assert "Both sides of OR operator" in info["failed"][0]
+        assert ctx.literals["l"] == False
+        assert ctx.literals["r"] == ast.Undefined()
+        assert "Both sides of OR operator" in ctx.failed[0]
 
     def test_logical_eval6(self):
         "Short circuit logic"
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('or', l, r)
-        res, info = a.analyze(MockPred(), {"l": True})
+        res, ctx = a.analyze(MockPred(), {"l": True})
         assert res
-        assert info["literals"]["l"] == True
-        assert "r" not in info["literals"]
+        assert ctx.literals["l"] == True
+        assert "r" not in ctx.literals
 
     def test_logical_eval7(self):
         "Short circuit logic"
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.LogicalOperator('and', l, r)
-        res, info = a.analyze(MockPred(), {"l": False})
+        res, ctx = a.analyze(MockPred(), {"l": False})
         assert not res
-        assert info["literals"]["l"] == False
-        assert "r" not in info["literals"]
-        assert "Left hand side" in info["failed"][0]
+        assert ctx.literals["l"] == False
+        assert "r" not in ctx.literals
+        assert "Left hand side" in ctx.failed[0]
 
     def test_negate_false(self):
         l = ast.Literal("l")
         a = ast.NegateOperator(l)
-        res, info = a.analyze(MockPred(), {"l": False})
+        res, ctx = a.analyze(MockPred(), {"l": False})
         assert res
-        assert info["literals"]["l"] == False
+        assert ctx.literals["l"] == False
 
     def test_negate_true(self):
         l = ast.Literal("l")
         a = ast.NegateOperator(l)
-        res, info = a.analyze(MockPred(), {"l": True})
+        res, ctx = a.analyze(MockPred(), {"l": True})
         assert not res
-        assert info["literals"]["l"] == True
+        assert ctx.literals["l"] == True
 
     @pytest.mark.parametrize(("type",), [
         (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
@@ -183,7 +183,7 @@ class TestAST(object):
         r = ast.Literal("r")
         a = ast.CompareOperator(type, l, r)
         d = {"l": 1, "r": 5}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
 
         # Determine the expected result
         if type == "=":
@@ -194,9 +194,9 @@ class TestAST(object):
 
         assert res == expected
         if not res:
-            assert ("%s comparison at" % type.upper()) in info["failed"][0]
-        assert info["literals"]["l"] == d["l"]
-        assert info["literals"]["r"] == d["r"]
+            assert ("%s comparison at" % type.upper()) in ctx.failed[0]
+        assert ctx.literals["l"] == d["l"]
+        assert ctx.literals["r"] == d["r"]
 
     @pytest.mark.parametrize(("type",), [
         (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
@@ -205,7 +205,7 @@ class TestAST(object):
         r = ast.Literal("r")
         a = ast.CompareOperator(type, l, r)
         d = {"l": 1}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
 
         # Determine the expected result
         if type == "!=":
@@ -213,9 +213,9 @@ class TestAST(object):
         else:
             assert not res
         if not res:
-            assert ("%s comparison at" % type.upper()) in info["failed"][0]
-        assert info["literals"]["l"] == d["l"]
-        assert info["literals"]["r"] == ast.Undefined()
+            assert ("%s comparison at" % type.upper()) in ctx.failed[0]
+        assert ctx.literals["l"] == d["l"]
+        assert ctx.literals["r"] == ast.Undefined()
 
     @pytest.mark.parametrize(("type",), [
         (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
@@ -224,7 +224,7 @@ class TestAST(object):
         r = ast.Literal("r")
         a = ast.CompareOperator(type, l, r)
         d = {"l": 1, "r": ast.Empty()}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
 
         # Determine the expected result
         if type == "!=":
@@ -232,91 +232,91 @@ class TestAST(object):
         else:
             assert not res
         if not res:
-            assert ("%s comparison at" % type.upper()) in info["failed"][0]
-        assert info["literals"]["l"] == d["l"]
-        assert info["literals"]["r"] == ast.Empty()
+            assert ("%s comparison at" % type.upper()) in ctx.failed[0]
+        assert ctx.literals["l"] == d["l"]
+        assert ctx.literals["r"] == ast.Empty()
 
     def test_contains_invalid(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.ContainsOperator(l, r)
         d = {"l": 1, "r": None}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert not res
-        assert "does not support contains" in info["failed"][0]
-        assert info["literals"]["l"] == 1
-        assert "r" not in info["literals"]
+        assert "does not support contains" in ctx.failed[0]
+        assert ctx.literals["l"] == 1
+        assert "r" not in ctx.literals
 
     def test_contains_undef(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.ContainsOperator(l, r)
         d = {"r": 5}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert not res
-        assert "not in left side" in info["failed"][0]
-        assert info["literals"]["l"] == ast.Undefined()
-        assert info["literals"]["r"] == 5
+        assert "not in left side" in ctx.failed[0]
+        assert ctx.literals["l"] == ast.Undefined()
+        assert ctx.literals["r"] == 5
 
     def test_contains_empty(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.ContainsOperator(l, r)
         d = {"l": [], "r": 5}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert not res
-        assert "not in left side" in info["failed"][0]
-        assert info["literals"]["l"] == []
-        assert info["literals"]["r"] == 5
+        assert "not in left side" in ctx.failed[0]
+        assert ctx.literals["l"] == []
+        assert ctx.literals["r"] == 5
 
     def test_contains_valid(self):
         l = ast.Literal("l")
         r = ast.Literal("r")
         a = ast.ContainsOperator(l, r)
         d = {"l": [42], "r": 42}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert res
-        assert info["literals"]["l"] == [42]
-        assert info["literals"]["r"] == 42
+        assert ctx.literals["l"] == [42]
+        assert ctx.literals["r"] == 42
 
     def test_match_bad_types(self):
         l = ast.Literal("l")
         r = ast.Regex(ast.Literal('abcd'))
         a = ast.MatchOperator(l, r)
         d = {"l": 42}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert not res
-        assert "not a string" in info["failed"][0]
-        assert info["literals"]["l"] == 42
+        assert "not a string" in ctx.failed[0]
+        assert ctx.literals["l"] == 42
 
     def test_match_undef(self):
         l = ast.Literal("l")
         r = ast.Regex(ast.Literal('abcd'))
         a = ast.MatchOperator(l, r)
         d = {}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert not res
-        assert "not a string" in info["failed"][0]
-        assert info["literals"]["l"] == ast.Undefined()
+        assert "not a string" in ctx.failed[0]
+        assert ctx.literals["l"] == ast.Undefined()
 
     def test_match_no_match(self):
         l = ast.Literal("l")
         r = ast.Regex(ast.Literal('abcd'))
         a = ast.MatchOperator(l, r)
         d = {"l": "tubez"}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert not res
-        assert "does not match" in info["failed"][0]
-        assert info["literals"]["l"] == "tubez"
+        assert "does not match" in ctx.failed[0]
+        assert ctx.literals["l"] == "tubez"
 
     def test_match(self):
         l = ast.Literal("l")
         r = ast.Regex(ast.Literal('abcd'))
         a = ast.MatchOperator(l, r)
         d = {"l": "abcd"}
-        res, info = a.analyze(MockPred(), d)
+        res, ctx = a.analyze(MockPred(), d)
         assert res
-        assert info["literals"]["l"] == "abcd"
+        assert ctx.literals["l"] == "abcd"
 
     def test_push(self):
         p = ast.PushResult(True, ast.Constant(True))
@@ -327,7 +327,7 @@ class TestAST(object):
                 self.res.append(m)
 
         testset = TestSet()
-        assert p.eval(testset, {}, None)
+        assert p.evaluate(testset, {})
         assert testset.res == [True]
 
     def test_branch(self):
@@ -338,23 +338,23 @@ class TestAST(object):
         false = ast.Constant(False)
         b = ast.Branch(check, true, false)
 
-        assert b.eval(MockPred(), {'a': 2, 'b':1})
+        assert b.evaluate(MockPred(), {'a': 2, 'b':1})
 
-        res, info = b.analyze(MockPred(), {'a': 1, 'b':2})
+        res, ctx = b.analyze(MockPred(), {'a': 1, 'b':2})
         assert not res
-        assert info["literals"]["a"] == 1
-        assert info["literals"]["b"] == 2
-        assert info["failed"][-1].startswith("Right hand side")
+        assert ctx.literals["a"] == 1
+        assert ctx.literals["b"] == 2
+        assert ctx.failed[-1].startswith("Right hand side")
 
     def test_both_false(self):
         c1 = ast.Constant(False)
         c2 = ast.Constant(False)
         n = ast.Both(c1, c2)
-        assert n.eval(MockPred(), {}) == False
+        assert n.evaluate(MockPred(), {}) == False
 
     def test_iterall_true(self):
         c1 = ast.Constant(False)
         c2 = ast.Constant(True)
         n = ast.Both(c1, c2)
-        assert n.eval(MockPred(), {}) == True
+        assert n.evaluate(MockPred(), {}) == True
 

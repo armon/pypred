@@ -7,6 +7,31 @@ from copy import deepcopy
 from functools import wraps
 
 
+class EvalContext(object):
+    """
+    Provides a context for the evaluation.
+    Allows for transient state that is needed during
+    an evaluation.
+    """
+    def __init__(self, predicate, doc, analyze=False):
+        self.pred = predicate
+        self.doc = doc
+        self.literals = {}
+        self.reach = 0
+        self.failed = []
+        self.analyze = analyze
+        self._analyze = analyze
+
+    def __enter__(self):
+        self.analyze = False
+
+    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        self.analyze = self._analyze
+
+    def resolve_identifier(self, ident):
+        return self.pred.resolve_identifier(self.doc, ident)
+
+
 def dup(ast):
     "Duplicates an AST tree"
     return deepcopy(ast)
@@ -15,10 +40,10 @@ def dup(ast):
 def failure_info(func):
     "Helper to provide error information on failure"
     @wraps(func)
-    def wrapper(self, pred, doc, info=None):
-        r = func(self, pred, doc, info)
-        if not r and info is not None:
-            self.failure_info(pred, doc, info)
+    def wrapper(self, ctx):
+        r = func(self, ctx)
+        if not r and ctx.analyze:
+            self.failure_info(ctx)
         return r
     return wrapper
 
@@ -112,19 +137,20 @@ class Node(object):
         Evaluates the AST tree against the document for the
         given predicate. Returns either True or False
         """
-        return bool(self.eval(pred, document, None))
+        ctx = EvalContext(pred, document)
+        return bool(self.eval(ctx))
 
     def analyze(self, pred, document):
         """
         Evaluates the AST tree against the document for the
-        given predicate and provides a dictionary with detailed
-        information about the evaluate and failure reasons
+        given predicate and provides the EvalContext with detailed
+        information about the evaluation and failure reasons
         """
-        info = {"failed":[], "literals": {}, "reach":0}
-        res = bool(self.eval(pred, document, info))
-        return res, info
+        ctx = EvalContext(pred, document, analyze=True)
+        res = bool(self.eval(ctx))
+        return res, ctx
 
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         "Node-specific implementation"
         return True
 
@@ -148,33 +174,34 @@ class LogicalOperator(Node):
         return True
 
     @failure_info
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         "Implement short-circuit logic"
         if self.type == "and":
-            if not self.left.eval(pred, doc, info):
+            if not self.left.eval(ctx):
                 return False
-            if not self.right.eval(pred, doc, info):
+            if not self.right.eval(ctx):
                 return False
             return True
         else:
-            if self.left.eval(pred, doc, info):
+            if self.left.eval(ctx):
                 return True
-            if self.right.eval(pred, doc, info):
+            if self.right.eval(ctx):
                 return True
             return False
 
-    def failure_info(self, pred, doc, info):
-        l = self.left.eval(pred, doc)
+    def failure_info(self, ctx):
+        with ctx:
+            l = self.left.eval(ctx)
         if self.type == "and" and not l:
             err = "Left hand side of " + self.name() + " failed"
-            info["failed"].append(err)
+            ctx.failed.append(err)
             return
 
         if self.type == "or":
             err = "Both sides of " + self.name() + " failed"
         else:
             err = "Right hand side of " + self.name() + " failed"
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class NegateOperator(Node):
@@ -186,12 +213,12 @@ class NegateOperator(Node):
         return "not operator at %s" % (self.position)
 
     @failure_info
-    def eval(self, pred, doc, info=None):
-        return not self.left.eval(pred, doc, info)
+    def eval(self, ctx):
+        return not self.left.eval(ctx)
 
-    def failure_info(self, pred, doc, info):
+    def failure_info(self, ctx):
         err = self.name() + " failed because sub-expression %s is true" % self.left.name()
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class CompareOperator(Node):
@@ -232,9 +259,9 @@ class CompareOperator(Node):
         self.type = self.OP_REVERSE[self.type]
 
     @failure_info
-    def eval(self, pred, doc, info=None):
-        left = self.left.eval(pred, doc, info)
-        right = self.right.eval(pred, doc, info)
+    def eval(self, ctx):
+        left = self.left.eval(ctx)
+        right = self.right.eval(ctx)
 
         # Check if this is an equality check
         if self.type in ("=", "is"):
@@ -257,22 +284,23 @@ class CompareOperator(Node):
         elif self.type == "<":
             return left < right
 
-    def failure_info(self, pred, doc, info):
-        l = self.left.eval(pred, doc)
-        r = self.right.eval(pred, doc)
+    def failure_info(self, ctx):
+        with ctx:
+            l = self.left.eval(ctx)
+            r = self.right.eval(ctx)
 
         # Check if it was a failure due to undefined or empty
         if self.type not in ('=', '!=', 'is') and \
                 isinstance(l, (Undefined, Empty)) or \
                 isinstance(r, (Undefined, Empty)):
             err = self.name() + " failed with Undefined or Empty operand"
-            info["failed"].append(err)
+            ctx.failed.append(err)
             return
 
         # Comparison failure
         err = self.name() + " failed, left: %s, right: %s" % \
                 (repr(l), repr(r))
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class ContainsOperator(Node):
@@ -289,24 +317,26 @@ class ContainsOperator(Node):
         return True
 
     @failure_info
-    def eval(self, pred, doc, info=None):
-        left = self.left.eval(pred, doc, info)
+    def eval(self, ctx):
+        left = self.left.eval(ctx)
         if hasattr(left, "__contains__"):
-            right = self.right.eval(pred, doc, info)
+            right = self.right.eval(ctx)
             return right in left
         return False
 
-    def failure_info(self, pred, doc, info):
-        left = self.left.eval(pred, doc)
+    def failure_info(self, ctx):
+        with ctx:
+            left = self.left.eval(ctx)
         if not hasattr(left, "__contains__"):
             err = "Left side: %s does not support contains for %s" \
                 % (repr(left), self.name())
         else:
-            right = self.right.eval(pred, doc)
+            with ctx:
+                right = self.right.eval(ctx)
             err = "Right side: %s not in left side: %s for %s" \
                     % (repr(right), repr(left), self.name())
 
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class MatchOperator(Node):
@@ -323,17 +353,18 @@ class MatchOperator(Node):
         return True
 
     @failure_info
-    def eval(self, pred, doc, info=None):
-        left = self.left.eval(pred, doc, info)
+    def eval(self, ctx):
+        left = self.left.eval(ctx)
         if not isinstance(left, str):
             return False
 
-        right = self.right.eval(pred, doc, info)
+        right = self.right.eval(ctx)
         match = right.search(left)
         return match is not None
 
-    def failure_info(self, pred, doc, info):
-        left = self.left.eval(pred, doc)
+    def failure_info(self, ctx):
+        with ctx:
+            left = self.left.eval(ctx)
         re_str = self.right.value
         if not isinstance(left, str):
             err = "Regex %s argument %s not a string" % \
@@ -341,7 +372,7 @@ class MatchOperator(Node):
         else:
             err = "Regex %s does not match %s for %s" % \
                     (repr(re_str), repr(left), self.name())
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class Regex(Node):
@@ -380,7 +411,7 @@ class Regex(Node):
 
         return True
 
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         if not self.re:
             self.re = re.compile(self.value)
         return self.re
@@ -409,22 +440,20 @@ class Literal(Node):
         self.static = True
         self.static_val = s
 
-    def eval(self, pred, doc, info=None):
-        # If we are analyzing, we have the cached value of the literal,
-        # we re-use it so that non-deterministic resolution doesn't
-        # cause strange errors.
-        if info and self.value in info["literals"]:
-            return info["literals"][self.value]
+    def eval(self, ctx):
+        # Use the EvalContext to avoid any non-deterministic
+        # resolution that can strange errors.
+        if self.value in ctx.literals:
+            return ctx.literals[self.value]
 
         # Use the predicate class to resolve the identifier
         if self.static:
             v = self.static_val
         else:
-            v = pred.resolve_identifier(doc, self.value)
+            v = ctx.resolve_identifier(self.value)
 
         # Cache the result
-        if info:
-            info["literals"][self.value] = v
+        ctx.literals[self.value] = v
         return v
 
 
@@ -450,7 +479,7 @@ class Number(Node):
             return False
         return True
 
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         return self.value
 
 
@@ -473,7 +502,7 @@ class Constant(Node):
             return False
         return True
 
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         return self.value
 
 
@@ -505,7 +534,7 @@ class Undefined(Node):
             return False
         return True
 
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         return self
 
 
@@ -529,7 +558,7 @@ class Empty(Node):
             return False
         return len(other) == 0
 
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         return self
 
 
@@ -547,17 +576,16 @@ class PushResult(Node):
         return "PushResult of '%s'" % self.pred.predicate
 
     @failure_info
-    def eval(self, pred, doc, info=None):
-        if info:
-            info["reach"] += 1
-        if self.left.eval(pred, doc, info):
-            pred.push_match(self.pred)
+    def eval(self, ctx):
+        ctx.reach += 1
+        if self.left.eval(ctx):
+            ctx.pred.push_match(self.pred)
             return True
         return False
 
-    def failure_info(self, pred, doc, info):
+    def failure_info(self, ctx):
         err = "Predicate '%s' failed to match" % self.pred.predicate
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class Branch(Node):
@@ -596,24 +624,25 @@ class Branch(Node):
         return buf
 
     @failure_info
-    def eval(self, pred, doc, info=None):
+    def eval(self, ctx):
         # Evaluate the expression first
-        res = self.expr.eval(pred, doc, info)
+        res = self.expr.eval(ctx)
 
         # Branch on the expression
         if res and self.left:
-            return self.left.eval(pred, doc, info)
+            return self.left.eval(ctx)
         elif self.right:
-            return self.right.eval(pred, doc, info)
+            return self.right.eval(ctx)
         return False
 
-    def failure_info(self, pred, doc, info):
-        res = self.expr.eval(pred, doc, info)
+    def failure_info(self, ctx):
+        with ctx:
+            res = self.expr.eval(ctx)
         if res:
             err = "Left hand side (True) of " + self.name() + " failed"
         else:
             err = "Right hand side (False) of " + self.name() + " failed"
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
 
 class Both(Node):
@@ -634,12 +663,12 @@ class Both(Node):
         return self.__class__.__name__
 
     @failure_info
-    def eval(self, pred, doc, info=None):
-        l = self.left.eval(pred, doc, info)
-        r = self.right.eval(pred, doc, info)
+    def eval(self, ctx):
+        l = self.left.eval(ctx)
+        r = self.right.eval(ctx)
         return l or r
 
-    def failure_info(self, pred, doc, info):
+    def failure_info(self, ctx):
         err = "Both sides of " + self.name() + " failed"
-        info["failed"].append(err)
+        ctx.failed.append(err)
 
