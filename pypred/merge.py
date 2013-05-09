@@ -8,6 +8,7 @@ using branches.
 from collections import defaultdict
 
 import ast
+import cache
 import compare
 import compact
 import util
@@ -47,6 +48,7 @@ class RefactorSettings():
         self.initial_optimize = True
         self.refactor = True
         self.compact = True
+        self.cache_expr = True
 
     @classmethod
     def minimum(cls):
@@ -146,6 +148,11 @@ def refactor(pred_set, ast, settings=None):
     # Compact the tree
     if settings.compact:
         compact.compact(ast)
+
+    # Cache any common expressions
+    if settings.cache_expr:
+        cache.cache_expressions(ast)
+
     return ast
 
 
