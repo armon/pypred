@@ -1,5 +1,6 @@
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 
+from ast import Undefined
 from merge import RefactorSettings
 from predicate import Predicate, InvalidPredicate
 from set import PredicateSet, OptimizedPredicateSet
@@ -9,6 +10,7 @@ __all__ = [
     "InvalidPredicate",
     "PredicateSet",
     "OptimizedPredicateSet",
-    "RefactorSettings"
+    "RefactorSettings",
+    "Undefined"
 ]
 

@@ -8,6 +8,8 @@
 * Duplicate expressions are cached to avoid wasted re-evaluations. This allows
   expressions with low selectivity to still avoid being re-evaluated, even though
   they are not in a branch.
+* Export ast.Undefined from the pypred package, since it is generally useful
+  for writing custom resolvers.
 
 
 ## 0.2.2
