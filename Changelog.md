@@ -10,6 +10,7 @@
   they are not in a branch.
 * Export ast.Undefined from the pypred package, since it is generally useful
   for writing custom resolvers.
+* SHA: 7d44ae4
 
 
 ## 0.2.2
