@@ -77,7 +77,7 @@ The main API's for it are:
 * Predicate.evaluate(document) : Evaluates the given document against the predicate
 
 * Predicate.analyze(document) : Evaluates the given document against the predicate,
-  returns the results, as well as a dictionary that includes more information about
+  returns the results, as well as the evaluation context that includes more information about
   the evaluation, including the failure reasons. This is generally much slower than
   evaluate in the failure cases.
 
@@ -104,7 +104,7 @@ The OptimizedPredicateSet supports an extended set of API's:
 
 * OptSet.description() : Returns ahuman readable version of the optimized tree
 
-* OptSet.analyze(document) : Like Predicate.analyze(), but returns a boolean, a list, and the info dict.
+* OptSet.analyze(document) : Like Predicate.analyze(), but returns a boolean, a list, and the evaluation context.
 
 * OptSet.compile\_ast() : Forces compilation of the interal AST
 
@@ -143,14 +143,16 @@ Here is an example of a human readable description of:
 Here is an example of the output during a failed evaluation:
 
     p = Predicate('server matches "east-web-([\d]+)" and errors contains "CPU load" and environment != test')
-    res, info = p.analyze({'server': 'east-web-001', 'errors': [], 'environment': 'prod'})
+    res, ctx = p.analyze({'server': 'east-web-001', 'errors': [], 'environment': 'prod'})
     assert res == False
-    pprint.pprint(info)
 
-    {'failed': ["Right side: 'CPU load' not in left side: [] for ContainsOperator at line: 1, col 45",
+    pprint.pprint(ctx.failed)
+    ["Right side: 'CPU load' not in left side: [] for ContainsOperator at line: 1, col 45",
                 'Left hand side of AND operator at line: 1, col 65 failed',
-                'Right hand side of AND operator at line: 1, col 34 failed'],
-     'literals': {'"CPU load"': 'CPU load',
-                  'errors': [],
-                  'server': 'east-web-001'}}
+                'Right hand side of AND operator at line: 1, col 34 failed']
+
+    pprint.pprint(ctx.literals)
+     {'"CPU load"': 'CPU load',
+      'errors': [],
+      'server': 'east-web-001'}
 
