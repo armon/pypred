@@ -148,6 +148,19 @@ class TestOptimizer(object):
         assert c == 1
         assert r is cmp
 
+    def test_or_dead_right(self):
+        "Tests removing OR with dead branch, right side"
+        f = ast.Constant(False)
+        l = ast.Literal('foo')
+        v = ast.Number(42)
+        cmp = ast.CompareOperator('=', l, v)
+        n = ast.LogicalOperator('or', cmp, f)
+
+        # Should reduce to to the compare
+        c, r = optimizer.optimization_pass(n)
+        assert c == 1
+        assert r is cmp
+
     def test_and_dead(self):
         "Tests removing AND with dead branch"
         t = ast.Constant(True)
@@ -155,6 +168,19 @@ class TestOptimizer(object):
         v = ast.Number(42)
         cmp = ast.CompareOperator('=', l, v)
         n = ast.LogicalOperator('and', t, cmp)
+
+        # Should reduce to to the compare
+        c, r = optimizer.optimization_pass(n)
+        assert c == 1
+        assert r is cmp
+
+    def test_and_dead_right(self):
+        "Tests removing AND with dead branch, right side"
+        t = ast.Constant(True)
+        l = ast.Literal('foo')
+        v = ast.Number(42)
+        cmp = ast.CompareOperator('=', l, v)
+        n = ast.LogicalOperator('and', cmp, t)
 
         # Should reduce to to the compare
         c, r = optimizer.optimization_pass(n)
