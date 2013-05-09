@@ -705,12 +705,13 @@ class CachedNode(Node):
         buf = self.expr.description(buf, depth+1, max_depth+2)
         return buf
 
-    @failure_info
     def eval(self, ctx):
         # Check the cache
         cached_res = ctx.cached_res.get(self.cache_id, None)
         if cached_res is not None:
             ctx.cache_hits += 1
+            if ctx.analyze and not cached_res:
+                self.failure_info(ctx)
             return cached_res
 
         # Evaluate
