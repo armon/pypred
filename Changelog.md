@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+* Fixed optimizer to handle missing cases
+* Internal change to use EvalContext instead of passing around multiple objects
+* .analyze() now return the EvalContext instead of a dict
+* Duplicate expressions are cached to avoid wasted re-evaluations. This allows
+  expressions with low selectivity to still avoid being re-evaluated, even though
+  they are not in a branch.
+
+
 ## 0.2.2
 
 * NegateOperator provides failure information
