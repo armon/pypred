@@ -20,6 +20,8 @@ class EvalContext(object):
         self.reach = 0
         self.failed = []
         self.cached_res = {}
+        self.cache_hits = 0
+        self.cache_misses = 0
         self.analyze = analyze
         self._analyze = analyze
 
@@ -708,9 +710,11 @@ class CachedNode(Node):
         # Check the cache
         cached_res = ctx.cached_res.get(self.cache_id, None)
         if cached_res is not None:
+            ctx.cache_hits += 1
             return cached_res
 
         # Evaluate
+        ctx.cache_misses += 1
         l = self.expr.eval(ctx)
 
         # Cache the result
