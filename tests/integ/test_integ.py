@@ -37,7 +37,7 @@ def test_samples():
                 print "\t%s : %s" % (k, repr(v))
             assert False
 
-        res, info = obj.analyze(DOC)
+        res, ctx = obj.analyze(DOC)
         if not pred.endswith("true") and not pred.endswith("false"):
             print "Line: ", line
             print "Unknown result!"
@@ -47,9 +47,9 @@ def test_samples():
         if (pred.endswith("true") and not res) or (pred.endswith("false") and res):
             print "Line: ", line
             print "Predicate: ", pred
-            print "Failures: ", "\n".join(info["failed"])
+            print "Failures: ", "\n".join(ctx.failed)
             print "Literals: "
-            for k, v in info["literals"].iteritems():
+            for k, v in ctx.literals.iteritems():
                 print "\t%s : %s" % (k, repr(v))
             assert False
 

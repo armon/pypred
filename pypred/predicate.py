@@ -203,14 +203,13 @@ class Predicate(LiteralResolver):
         the cause of failure. This is generally much slower
         that using the equivilent `evaluate`.
 
-        Returns a tuple of (Result, Info).
-        Result is a boolean, and info is a dictionary containing
-        "failed" and "literals". The failed key has all the failure
-        reasons in order. The literals dict contains the resolved
-        values for all literals.
+        Returns a tuple of (Result, Ctx).
+        Result is a boolean, and ctx is the evaluation context, containing among other
+        things the failure reasons and all of the literal resolution values.
+        The failed attribute has all the failure reasons in order.
+        The literals attribute contains the resolved values for all literals.
         """
         if not self.is_valid():
             raise InvalidPredicate
         return self.ast.analyze(self, document)
-
 

@@ -8,7 +8,7 @@ class TestPredicate(object):
         p = Predicate("name is 'Jack' and friend is 'Jill'")
         assert p.is_valid()
         assert p.evaluate({"name": "Jack", "friend": "Jill"})
-        res, info = p.analyze({"name": "Jack", "friend": "Jill"})
+        res, ctx = p.analyze({"name": "Jack", "friend": "Jill"})
         assert res
         assert p.description() == """AND operator at line: 1, col 15
 	IS comparison at line: 1, col 5
