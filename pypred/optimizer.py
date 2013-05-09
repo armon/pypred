@@ -144,17 +144,25 @@ class ShortCircuitLogicalPattern(Pattern):
         return False
 
     def _replacement(self, node):
-        # Only operate if the left side is a constant
-        if not isinstance(node.left, ast.Constant):
-            return None
+        if isinstance(node.left, ast.Constant):
+            # true and expr -> expr
+            if node.type == "and" and node.left.value == True:
+                return node.right
 
-        # true and expr -> expr
-        if node.type == "and" and node.left.value == True:
-            return node.right
+            # false or expr -> expr
+            if node.type == "or" and node.left.value == False:
+                return node.right
 
-        # false or expr -> expr
-        if node.type == "or" and node.left.value == False:
-            return node.right
+        elif isinstance(node.right, ast.Constant):
+            # expr and true -> expr
+            if node.type == "and" and node.right.value == True:
+                return node.left
+
+            # expr or false -> expr
+            if node.type == "or" and node.right.value == False:
+                return node.left
+
+        return None
 
     def replacement(self, node):
         r = self._replacement(node)
