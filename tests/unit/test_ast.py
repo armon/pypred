@@ -358,3 +358,21 @@ class TestAST(object):
         n = ast.Both(c1, c2)
         assert n.evaluate(MockPred(), {}) == True
 
+    def test_cached_node_uses_cache(self):
+        c = ast.Constant(False)
+        n = ast.CachedNode(c, 0)
+
+        ctx = ast.EvalContext(MockPred(), {})
+        ctx.cached_res[0] = True
+
+        assert n.eval(ctx)
+
+    def test_cached_node_sets_cache(self):
+        c = ast.Constant(False)
+        n = ast.CachedNode(c, 0)
+
+        ctx = ast.EvalContext(MockPred(), {})
+
+        assert not n.eval(ctx)
+        assert not ctx.cached_res[0]
+

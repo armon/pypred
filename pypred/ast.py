@@ -19,6 +19,7 @@ class EvalContext(object):
         self.literals = {}
         self.reach = 0
         self.failed = []
+        self.cached_res = {}
         self.analyze = analyze
         self._analyze = analyze
 
@@ -671,4 +672,52 @@ class Both(Node):
     def failure_info(self, ctx):
         err = "Both sides of " + self.name() + " failed"
         ctx.failed.append(err)
+
+
+class CachedNode(Node):
+    """
+    Special node class that is used to avoid re-computing
+    values if they are already cached. This is used when
+    predicates are merged and share expressions that are
+    not refactored into a branch.
+    """
+    def __init__(self, left, cache_id):
+        self.expr = left
+        self.cache_id = cache_id
+
+    def name(self):
+        return "Cache of " + self.expr.name()
+
+    def description(self, buf=None, depth=0, max_depth=0):
+        """
+        Provides a human readable tree description
+        """
+        if not buf:
+            buf = ""
+        pad = depth * "\t"
+        if max_depth and depth == max_depth:
+            buf += pad + "...\n"
+            return buf
+
+        buf += pad + self.name() + "\n"
+        buf = self.expr.description(buf, depth+1, max_depth+2)
+        return buf
+
+    @failure_info
+    def eval(self, ctx):
+        # Check the cache
+        cached_res = ctx.cached_res.get(self.cache_id, None)
+        if cached_res is not None:
+            return cached_res
+
+        # Evaluate
+        l = self.expr.eval(ctx)
+
+        # Cache the result
+        ctx.cached_res[self.cache_id] = l
+        return l
+
+    def failure_info(self, ctx):
+        if hasattr(self.expr, "failure_info"):
+            self.expr.failure_info(ctx)
 
