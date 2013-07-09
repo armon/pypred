@@ -257,7 +257,7 @@ def rewrite_ast(node, name, expr, assumed_result):
         return compare.compare_rewrite(node, name, expr, assumed_result)
 
     elif name[0] == "ContainsOperator" and name[1] == 'LiteralSet':
-        return contains.contains_rewrite(name, name, expr, assumed_result)
+        return contains.contains_rewrite(node, name, expr, assumed_result)
 
     else:
         # Tile over the AST and replace the expresssion
