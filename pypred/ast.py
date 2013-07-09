@@ -431,6 +431,15 @@ class Literal(Node):
     def __deepcopy__(self, memo=None):
         return self
 
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, Literal):
+            return self.value == other.value
+        else:
+            return False
+
     def name(self):
         return "Literal %s at %s" % (self.value, self.position)
 
@@ -471,6 +480,15 @@ class Number(Node):
     def __deepcopy__(self, memo=None):
         return self
 
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, Number):
+            return self.value == other.value
+        else:
+            return False
+
     def name(self):
         return "Number %f at %s" % (self.value, self.position)
 
@@ -493,6 +511,15 @@ class Constant(Node):
 
     def __deepcopy__(self, memo=None):
         return self
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, Constant):
+            return self.value == other.value
+        else:
+            return False
 
     def name(self):
         return "Constant %s at %s" % (self.value, self.position)
@@ -524,6 +551,9 @@ class Undefined(Node):
     def __contains__(self, o):
         return False
 
+    def __hash__(self):
+        return hash(None)
+
     def __eq__(self, other):
         "Only equal to undefined"
         return isinstance(other, (Undefined, Empty))
@@ -552,6 +582,9 @@ class Empty(Node):
     def __nonzero__(self):
         "Acts like False"
         return False
+
+    def __hash__(self):
+        return hash(None)
 
     def __eq__(self, other):
         "Only equal to things of zero length"
