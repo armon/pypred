@@ -385,7 +385,7 @@ class TestAST(object):
         s = ast.LiteralSet([ast.Constant(True), ast.Literal('a'), ast.Literal('b')])
         ctx = ast.EvalContext(MockPred(), {'a': 2, 'b': False})
         res = s.eval(ctx)
-        assert isinstance(res, set)
+        assert isinstance(res, frozenset)
         assert True in res
         assert False in res
         assert 2 in res

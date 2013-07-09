@@ -18,3 +18,6 @@ empty is undefined # true
 val > val2 or val < val2 # true
 nested contains 'tweet' # true
 thingy is 200 and val is 100 # false
+{"Jack" "Joe" "Jill"} contains name # true
+{400 500} contains status # true
+{"east-db-001" "east-foo-002"} contains server # false
