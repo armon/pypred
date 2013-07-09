@@ -23,7 +23,7 @@ def compact(node):
 def node_name(node):
     "Returns a hashable name that can be used for counting"
     cls_name = node.__class__.__name__
-    if cls_name in ("Literal", "Number", "Constant", "Regex"):
+    if cls_name in ("Literal", "Number", "Constant", "Regex", "LiteralSet"):
         return (cls_name, node.value)
 
     elif cls_name in ("Undefined", "Empty"):
