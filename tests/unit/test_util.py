@@ -21,3 +21,13 @@ class TestUtil(object):
         }
         assert 30, "zip" == util.max_count(d)
 
+    def test_harmonic_mean(self):
+        "Tests the hamronic mean"
+        v = [1,2,3,4,5,6,7,8,9,10]
+        m = util.harmonic_mean(v)
+        assert int(m * 1000) == 3414
+
+        v = [0.01, 0.01, 0.2, 0.2, 0.3, 0.01]
+        m = util.harmonic_mean(v)
+        assert int(m * 1000) == 19
+

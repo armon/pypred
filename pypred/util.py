@@ -40,3 +40,9 @@ def max_count(count):
             max_name = n
     return (max_count, max_name)
 
+def harmonic_mean(lst):
+    "Returns the harmonic mean. Will crash if any value is zero."
+    n = len(lst)
+    inv_sum = sum((1.0 / x) for x in lst)
+    return (1.0 / ((1.0 / n) * inv_sum))
+
