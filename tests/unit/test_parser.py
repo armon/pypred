@@ -138,6 +138,14 @@ class TestParser(object):
             ast.Literal("\"quote\"")
         ])
 
+    def test_literal_set_empty(self):
+        inp = "{}"
+        lexer = parser.get_lexer()
+        p = parser.get_parser()
+        res = p.parse(inp, lexer=lexer)
+        assert isinstance(res, ast.LiteralSet)
+        assert res.value == set([])
+
     def test_error_end(self):
         inp = "false and"
         lexer = parser.get_lexer()
