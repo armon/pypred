@@ -767,6 +767,7 @@ class LiteralSet(Node):
     contains.
     """
     static = False
+    static_val = None
 
     def __init__(self, value):
         self.value = set(value)
@@ -796,7 +797,7 @@ class LiteralSet(Node):
         # If all items are static, so are we
         if static:
             self.static = True
-            self.value = static_val
+            self.static_val = static_val
 
     def __nonzero__(self):
         "Acts like False"
@@ -820,7 +821,7 @@ class LiteralSet(Node):
     def eval(self, ctx):
         # Static sets are easy
         if self.static:
-            return self.value
+            return self.static_val
 
         # Non-static set requires resolution of each literal value
         s = set([])
