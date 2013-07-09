@@ -146,6 +146,11 @@ def refactor(pred_set, ast, settings=None):
     if settings.refactor:
         ast = recursive_refactor(ast, settings)
 
+    # Perform static resolution of all literals again, since
+    # literal sets may have changed
+    if settings.static_rewrite:
+        static_resolution(ast, pred_set)
+
     # Compact the tree
     if settings.compact:
         compact.compact(ast)
@@ -162,7 +167,7 @@ def static_resolution(ast, pred):
     def resolve_func(pattern, literal):
         literal.static_resolve(pred)
 
-    pattern = SimplePattern("types:Literal")
+    pattern = SimplePattern("types:Literal,LiteralSet")
     tile(ast, [pattern], resolve_func)
 
 
