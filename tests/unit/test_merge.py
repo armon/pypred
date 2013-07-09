@@ -38,6 +38,11 @@ class TestMerge(object):
         n11_name = merge.node_name(n11)
         assert ("Literal", "foo") == n11_name
 
+        # Literal set just uses name
+        n12 = ast.LiteralSet([n1, n2])
+        n12_name = merge.node_name(n12)
+        assert "LiteralSet" == n12_name
+
     def test_count(self):
         pred_str = """foo > 12 and bar != 0 or not test and
 name matches '^test$' and list contains elem and foo > 20
@@ -70,6 +75,16 @@ name matches '^test$' and list contains elem and foo > 20
         with patch('pypred.merge.compare.compare_rewrite') as c:
             merge.rewrite_ast(n, name, n, True)
             assert c.called
+
+    def test_rewrite_contains(self):
+        "Checks that a contain rewrite uses contains module"
+        l = ast.LiteralSet([ast.Number(1), ast.Number(2)])
+        r = ast.Literal('bar')
+        c = ast.ContainsOperator(l, r)
+        name = merge.node_name(c)
+        with patch('pypred.merge.contains.contains_rewrite') as cr:
+            merge.rewrite_ast(c, name, c, True)
+            assert cr.called
 
     def test_select_expr_negate(self):
         "Checks that a negate operation is not selected"
@@ -109,6 +124,17 @@ name matches '^test$' and list contains elem and foo > 20
         with patch('pypred.merge.compare.select_rewrite_expression') as c:
             merge.select_rewrite_expression(name, [n])
             assert c.called
+
+    def test_select_expr_contains(self):
+        "Checks that a contains operation uses contains module"
+        l = ast.LiteralSet([ast.Number(1), ast.Number(2)])
+        r = ast.Literal('bar')
+        c = ast.ContainsOperator(l, r)
+        name = merge.node_name(c)
+
+        with patch('pypred.merge.contains.select_rewrite_expression') as cr:
+            merge.select_rewrite_expression(name, [c])
+            assert cr.called
 
     def test_merge(self):
         "Tests a simple merge"
