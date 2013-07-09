@@ -768,12 +768,8 @@ class LiteralSet(Node):
     """
     static = False
 
-    def __init__(self):
-        self.value = set([])
-
-    def add(self, v):
-        "Adds a value to the set"
-        self.value.add(v)
+    def __init__(self, value):
+        self.value = set(value)
 
     def name(self):
         return "Set of %s" % repr(self.value)

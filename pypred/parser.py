@@ -217,9 +217,7 @@ def p_factor_list(p):
 
 def p_factor_sets(p):
     "factor : LBRACK factor_list RBRACK"
-    p[0] = ast.LiteralSet()
-    for i in p[2]:
-        p[0].add(i)
+    p[0] = ast.LiteralSet(p[2])
 
 def p_error(p):
     "Handles errors"
