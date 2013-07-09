@@ -94,7 +94,7 @@ def optimization_patterns():
     p11 = DeadBranchPattern()
 
     # Remove empty sets
-    p12 = SimplePattern("types:LiteralSet AND value:set([])")
+    p12 = SimplePattern("types:LiteralSet AND value:frozenset([])")
     p12.replacement = ast.Empty()
 
     # Replace "Empty contains *" with False

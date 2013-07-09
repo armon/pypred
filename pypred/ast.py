@@ -770,7 +770,7 @@ class LiteralSet(Node):
     static_val = None
 
     def __init__(self, value):
-        self.value = set(value)
+        self.value = frozenset(value)
 
     def name(self):
         return "Set of %s" % repr(self.value)
@@ -831,5 +831,5 @@ class LiteralSet(Node):
             else:
                 v = i.value
             s.add(v)
-        return s
+        return frozenset(s)
 
