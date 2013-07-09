@@ -5,6 +5,11 @@ import pytest
 from pypred import parser, ast
 
 class MockPred(object):
+    def static_resolve(self, identifier):
+        if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
+            return identifier[1:-1]
+        return ast.Undefined()
+
     def resolve_identifier(self, doc, ident):
         if ident in doc:
             return doc[ident]
@@ -375,4 +380,24 @@ class TestAST(object):
 
         assert not n.eval(ctx)
         assert not ctx.cached_res[0]
+
+    def test_litset_eval(self):
+        s = ast.LiteralSet([ast.Constant(True), ast.Literal('a'), ast.Literal('b')])
+        ctx = ast.EvalContext(MockPred(), {'a': 2, 'b': False})
+        res = s.eval(ctx)
+        assert isinstance(res, set)
+        assert True in res
+        assert False in res
+        assert 2 in res
+
+    def test_litset_static(self):
+        s = ast.LiteralSet([ast.Constant(True), ast.Literal('\"a\"')])
+        pred = MockPred()
+        s.static_resolve(pred)
+        ctx = ast.EvalContext(pred, {'a': 2, 'b': False})
+        res = s.eval(ctx)
+        assert s.static
+        assert isinstance(res, frozenset)
+        assert True in res
+        assert "a" in res
 

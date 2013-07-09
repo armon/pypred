@@ -777,18 +777,26 @@ class LiteralSet(Node):
     def static_resolve(self, pred):
         "Uses the predicate to perform a static resolution"
         static = True
+        static_val = set([])
 
         # Check if each item is static
         for item in self.value:
             # Only check literal, since Number and Constant
             # are always static
-            if isinstance(Literal):
+            if isinstance(item, Literal):
                 item.static_resolve(pred)
-                static = static and item.static
+                if item.static:
+                    static_val.add(item.static_val)
+                else:
+                    static = False
+            else:
+                static_val.add(item.value)
+
 
         # If all items are static, so are we
         if static:
             self.static = True
+            self.value = static_val
 
         # Convert to a frozenset
         self.value = frozenset(self.value)
@@ -813,5 +821,17 @@ class LiteralSet(Node):
             return False
 
     def eval(self, ctx):
-        return self.value
+        # Static sets are easy
+        if self.static:
+            return self.value
+
+        # Non-static set requires resolution of each literal value
+        s = set([])
+        for i in self.value:
+            if isinstance(i, Literal):
+                v = i.eval(ctx)
+            else:
+                v = i.value
+            s.add(v)
+        return s
 
