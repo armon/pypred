@@ -798,9 +798,6 @@ class LiteralSet(Node):
             self.static = True
             self.value = static_val
 
-        # Convert to a frozenset
-        self.value = frozenset(self.value)
-
     def __nonzero__(self):
         "Acts like False"
         return len(self.value) > 0

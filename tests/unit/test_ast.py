@@ -397,7 +397,7 @@ class TestAST(object):
         ctx = ast.EvalContext(pred, {'a': 2, 'b': False})
         res = s.eval(ctx)
         assert s.static
-        assert isinstance(res, frozenset)
+        assert isinstance(res, set)
         assert True in res
         assert "a" in res
 
