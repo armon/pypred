@@ -90,3 +90,8 @@ class TestLexer(object):
         tokens = list(lexer)
         assert [t.type for t in tokens] == ['STRING', 'AND', 'STRING']
 
+    def test_set_literal(self):
+        inp = "{true false 1.0 \"quote\"}"
+        expected = ['LBRACK', 'TRUE', 'FALSE', 'NUMBER', 'STRING', 'RBRACK']
+        self.assert_types(inp, expected)
+

@@ -125,6 +125,11 @@ class TestParser(object):
     "Constant v:None"
 ])
 
+    def test_literal_set(self):
+        inp = "{true false 1.0 \"quote\"}"
+        self.assert_nodes(inp, [
+"LiteralSet v:set([Constant v:True, Number v:1.0, Literal v:\"quote\", Constant v:False])"])
+
     def test_error_end(self):
         inp = "false and"
         lexer = parser.get_lexer()
