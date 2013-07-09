@@ -35,6 +35,8 @@ tokens = (
     'IS_NOT_EQUALS',
     'LPAREN',
     'RPAREN',
+    'LBRACK',
+    'RBRACK',
     'CONTAINS',
     'MATCHES',
     'NUMBER',
@@ -58,6 +60,9 @@ t_NOT_EQUALS = r'!='
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
+
+t_LBRACK = r'{'
+t_RBRACK = r'}'
 
 # Ignore any comments
 t_ignore_COMMENT = r'\#.*'
@@ -198,6 +203,23 @@ def p_factor_parens(p):
     "factor : LPAREN expression RPAREN"
     p[0] = p[2]
 
+def p_empty(p):
+    "empty : "
+    pass
+
+def p_factor_list(p):
+    """factor_list : factor factor_list
+                   | empty"""
+    if len(p) == 2 and p[1] is None:
+        p[0] = []
+    else:
+        p[0] = [p[1]] + p[2]
+
+def p_factor_sets(p):
+    "factor : LBRACK factor_list RBRACK"
+    p[0] = ast.LiteralSet()
+    for i in p[2]:
+        p[0].add(i)
 
 def p_error(p):
     "Handles errors"

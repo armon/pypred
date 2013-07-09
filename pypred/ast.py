@@ -726,3 +726,63 @@ class CachedNode(Node):
         if hasattr(self.expr, "failure_info"):
             self.expr.failure_info(ctx)
 
+
+class LiteralSet(Node):
+    """
+    This node represents a 'set' of values. It is constructed
+    as a literal in the predicate and is used for things like
+    contains.
+    """
+    static = False
+
+    def __init__(self):
+        self.value = set([])
+
+    def add(self, v):
+        "Adds a value to the set"
+        self.value.add(v)
+
+    def name(self):
+        return "Set of %s" % repr(self.value)
+
+    def static_resolve(self, pred):
+        "Uses the predicate to perform a static resolution"
+        static = True
+
+        # Check if each item is static
+        for item in self.value:
+            # Only check literal, since Number and Constant
+            # are always static
+            if isinstance(Literal):
+                item.static_resolve(pred)
+                static = static and item.static
+
+        # If all items are static, so are we
+        if static:
+            self.static = True
+
+        # Convert to a frozenset
+        self.value = frozenset(self.value)
+
+    def __nonzero__(self):
+        "Acts like False"
+        return len(self.value) > 0
+
+    def __contains__(self, o):
+        return o in self.value
+
+    def __eq__(self, other):
+        if len(self.value) == 0 and isinstance(other, (Undefined, Empty)):
+            return True
+        elif isinstance(other, LiteralSet):
+            return self.value == other.value
+        elif isinstance(other, set):
+            return self.value == other
+        elif isinstance(other, list):
+            return self.value == set(other)
+        else:
+            return False
+
+    def eval(self, ctx):
+        return self.value
+
