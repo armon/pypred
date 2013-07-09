@@ -215,3 +215,30 @@ class TestOptimizer(object):
         assert c == 1
         assert r is cmp
 
+    def test_empty_set(self):
+        "Test removing an empty literal set"
+        s = ast.LiteralSet([])
+        c, r = optimizer.optimization_pass(s)
+        assert c == 1
+        assert isinstance(r, ast.Empty)
+
+    def test_empty_contains(self):
+        "Tests removing an Empty contains X"
+        e = ast.Empty()
+        v = ast.Literal('foo')
+        cn = ast.ContainsOperator(e, v)
+        c, r = optimizer.optimization_pass(cn)
+        assert c == 1
+        assert isinstance(r, ast.Constant)
+        assert r.value == False
+
+    def test_undef_contains(self):
+        "Tests removing an Empty contains X"
+        u = ast.Undefined()
+        v = ast.Literal('foo')
+        cn = ast.ContainsOperator(u, v)
+        c, r = optimizer.optimization_pass(cn)
+        assert c == 1
+        assert isinstance(r, ast.Constant)
+        assert r.value == False
+

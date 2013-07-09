@@ -93,7 +93,15 @@ def optimization_patterns():
     # Remove dead branches
     p11 = DeadBranchPattern()
 
-    CACHE_PATTERNS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11]
+    # Remove empty sets
+    p12 = SimplePattern("types:LiteralSet AND value:set([])")
+    p12.replacement = ast.Empty()
+
+    # Replace "Empty contains *" with False
+    p13 = SimplePattern("types:ContainsOperator", "types:Empty,Undefined")
+    p13.replacement = ast.Constant(False)
+
+    CACHE_PATTERNS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13]
     return CACHE_PATTERNS
 
 
