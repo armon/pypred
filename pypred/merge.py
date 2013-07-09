@@ -10,6 +10,7 @@ from collections import defaultdict
 import ast
 import cache
 import compare
+import contains
 import compact
 import util
 from ast import dup
@@ -222,6 +223,11 @@ def select_rewrite_expression(name, exprs):
     if name[0] == "CompareOperator":
         return compare.select_rewrite_expression(name, exprs)
 
+    # Check if this is a contains operator. The contains operator
+    # uses static rewriting if we are operating on LiteralSets
+    elif name[0] == "ContainsOperator" and name[1] == 'LiteralSet':
+        return contains.select_rewrite_expression(name, exprs)
+
     # For negate operators, use the sub-expression
     elif isinstance(exprs[0], ast.NegateOperator):
         return exprs[0].left
@@ -244,6 +250,9 @@ def rewrite_ast(node, name, expr, assumed_result):
     """
     if name[0] == "CompareOperator":
         return compare.compare_rewrite(node, name, expr, assumed_result)
+
+    elif name[0] == "ContainsOperator" and name[1] == 'LiteralSet':
+        return contains.contains_rewrite(name, name, expr, assumed_result)
 
     else:
         # Tile over the AST and replace the expresssion
@@ -288,6 +297,9 @@ def node_name(node, enable_static=False):
             return (cls_name, "static")
         else:
             return (cls_name, node.value)
+
+    elif cls_name == "LiteralSet":
+        return cls_name
 
     elif cls_name == "Number":
         if enable_static:
@@ -341,7 +353,7 @@ def count_patterns():
     if CACHE_PATTERNS:
         return CACHE_PATTERNS
 
-    simple_types = "types:Literal,Number,Constant,Undefined,Empty"
+    simple_types = "types:Literal,LiteralSet,Number,Constant,Undefined,Empty"
 
     # Handle a negation of a simple type
     p1 = SimplePattern("types:NegateOperator", "types:Literal")
