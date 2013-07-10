@@ -19,7 +19,11 @@ class TestUtil(object):
             "zip": 30,
             "zoo": 4
         }
-        assert 30, "zip" == util.max_count(d)
+        gen = util.max_count(d)
+        assert ((30, "zip") == gen.next())
+        assert ((20, "bar") == gen.next())
+        assert ((10, "foo") == gen.next())
+        assert ((4, "zoo") == gen.next())
 
     def test_harmonic_mean(self):
         "Tests the hamronic mean"

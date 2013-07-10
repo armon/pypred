@@ -1,6 +1,7 @@
 """
 Various utility methods that are used
 """
+import heapq
 from collections import defaultdict
 
 def mode(lst):
@@ -31,14 +32,12 @@ def median(lst):
     return lst[middle]
 
 def max_count(count):
-    "Returns the key with the maximum value"
-    max_count = 0
-    max_name = None
-    for n, c in count.iteritems():
-        if c > max_count:
-            max_count = c
-            max_name = n
-    return (max_count, max_name)
+    "Generator for the keys with the maximum value"
+    vals = [(-c, n) for n,c in count.iteritems()]
+    heapq.heapify(vals)
+    while len(vals):
+        c, n = heapq.heappop(vals)
+        yield (-c, n)
 
 def harmonic_mean(lst):
     "Returns the harmonic mean. Will crash if any value is zero."
