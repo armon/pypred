@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5
+
+* Added Literal Set support. This allows for sane contains with a literal
+  collection of Literal, Number, or Constant values.
+* SHA: 5a2d4f1
+
 ## 0.3.0
 
 * Fixed optimizer to handle missing cases
