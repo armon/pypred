@@ -4,7 +4,7 @@
 
 * Improve the optimization of LiteralSet by making sets as small as possible,
 and avoiding branches on low density sets.
-* SHA: aad3918
+* SHA: e8dbdb4
 
 ## 0.3.5
 
