@@ -1,5 +1,5 @@
 from setuptools import setup
-__version__ = "0.3.0"
+__version__ = "0.3.5"
 
 # Get the long description by reading the README
 try:

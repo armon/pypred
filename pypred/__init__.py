@@ -1,4 +1,4 @@
-__version__ = "0.3.0"
+__version__ = "0.3.5"
 
 from ast import Undefined
 from merge import RefactorSettings
