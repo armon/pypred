@@ -36,6 +36,7 @@ It supports the following:
 * String literals, quoted if they include spaces
 * Numeric literals
 * Constants true, false, undefined, null, empty
+* Set literal, containing string literals, numeric and constant values
 
 Grammar Examples
 ================
@@ -58,6 +59,13 @@ or that the score is less than 10 if a low score is desirable.
 
 This checks for any webserver hostname matching a numeric suffix, such as "east-web-001", with
 "CPU load" being reported as an error in a non-test environment.
+
+Literal sets can be used to check for multiple clauses:
+
+    {"WARN" "ERR" "CRIT"} contains error_level or {500 501 503} contains status_code
+
+This provides two literal sets which are used to check against the dynamic values
+of error\_level and status\_code.
 
 API
 ===
