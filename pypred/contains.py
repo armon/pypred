@@ -12,7 +12,7 @@ import ast
 import util
 from tiler import ASTPattern, SimplePattern, tile
 
-def select_rewrite_expression(name, exprs):
+def select_rewrite_expression(settings, name, exprs):
     """
     Given an expression name and a list of expressions,
     tries to select an expression with the highest selectivity
@@ -38,7 +38,11 @@ def select_rewrite_expression(name, exprs):
         scores.append((hm, exprs[idx]))
 
     # Reverse sort, get the highest score
-    sorted(scores, reverse=True)
+    sorted(scores, key=lambda p: p[0], reverse=True)
+
+    # Check if we hit our minimum threshold
+    if scores[0][0] < settings.min_density:
+        return None
 
     # Return the highest score
     return scores[0][1]
@@ -63,13 +67,24 @@ def contains_rewrite(node, name, expr, assumed_result):
             # then we can re-write to true
             if set_prime == expr_set:
                 return ast.Constant(True)
+
+            # If there is no overlap, we are false
+            elif len(set_prime) == 0:
+                return ast.Constant(False)
+
+            # Check if the set difference is smaller, and use negate
+            set_prime_diff = expr_set - node.left.value
+            if len(set_prime_diff) < len(set_prime):
+                node.left.value = set_prime_diff
+                return ast.NegateOperator(node)
+
         else:
             set_prime = node.left.value - expr_set
 
-        # If we end up with the empty set
-        # meaning subset, then its false
-        if len(set_prime) == 0:
-            return ast.Constant(False)
+            # If we end up with the empty set
+            # meaning subset, then its false
+            if len(set_prime) == 0:
+                return ast.Constant(False)
 
         # Alter the set we are checking
         node.left.value = set_prime

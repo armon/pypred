@@ -20,7 +20,7 @@ from tiler import ASTPattern, SimplePattern, tile
 CACHE_PATTERNS = None
 
 class RefactorSettings():
-    def __init__(self, max_depth, min_select, max_opt_pass, min_change):
+    def __init__(self, max_depth, min_select, max_opt_pass, min_change, min_density):
         """
         Defines the settings for a refactor. Parameters:
         -`max_depth` - Maximum branch depth of the tree. This causes
@@ -38,11 +38,16 @@ class RefactorSettings():
         -`min_change` - Minimum changes in a pass of the optimizer
          before the optimizer terminates. Best to set this to 1 and
          allow the optimizer to run until there are no further changes.
+
+        -`min_density` - Minimum average density of a LiteralSet before
+         it is eligible to be used as a branching expression. Setting this
+         too low can cause useless branches.
         """
         self.max_depth = max_depth
         self.min_select = min_select
         self.max_opt_pass = max_opt_pass
         self.min_change = min_change
+        self.min_density = min_density
 
         self.static_rewrite = True
         self.canonicalize = True
@@ -59,7 +64,7 @@ class RefactorSettings():
 
         Worst case blow up of 4 times (2^2).
         """
-        return RefactorSettings(2, 8, 32, 1)
+        return RefactorSettings(2, 8, 32, 1, 0.1)
 
     @classmethod
     def shallow(cls):
@@ -70,7 +75,7 @@ class RefactorSettings():
 
         Worst case blow up of 16 times (2^4).
         """
-        return RefactorSettings(4, 16, 32, 1)
+        return RefactorSettings(4, 16, 32, 1, 0.05)
 
     @classmethod
     def deep(cls):
@@ -81,7 +86,7 @@ class RefactorSettings():
 
         Worst case blow up of 256 times (2^8).
         """
-        return RefactorSettings(8, 32, 32, 1)
+        return RefactorSettings(8, 32, 32, 1, 0.03)
 
     @classmethod
     def extreme(cls):
@@ -91,7 +96,7 @@ class RefactorSettings():
 
         Worst case blow up of 65536 times (2^16).
         """
-        return RefactorSettings(16, 64, 32, 1)
+        return RefactorSettings(16, 64, 32, 1, 0.01)
 
 
 def merge(predicates):
@@ -185,19 +190,27 @@ def recursive_refactor(node, settings, depth=0):
 
     # Do the cost calculation
     count, names = count_expressions(node)
-    max, name = util.max_count(count)
 
-    # Base case is that there is no further reductions
-    if max < settings.min_select:
+    # Iterate over expressions until we find a suitable expression
+    expr = None
+    for max, name in util.max_count(count):
+        # Base case is that there is no further reductions
+        if max < settings.min_select:
+            return node
+
+        # We now take the expression and do a simple
+        # path expansion. We have a "true" (left) branch,
+        # that assumes the expression is true. Then we have
+        # a "false" (right) branch. Each branch has the
+        # expression re-written into a constant value
+        # and then we do an optimization pass.
+        expr = select_rewrite_expression(settings, name, names[name])
+        if expr is not None:
+            break
+
+    # If we don't find an expression, finish
+    if expr is None:
         return node
-
-    # We now take the expression and do a simple
-    # path expansion. We have a "true" (left) branch,
-    # that assumes the expression is true. Then we have
-    # a "false" (right) branch. Each branch has the
-    # expression re-written into a constant value
-    # and then we do an optimization pass.
-    expr = select_rewrite_expression(name, names[name])
 
     # Do a deep copy on the left side, since we
     # are re-writing the tree, re-use the right side
@@ -215,7 +228,7 @@ def recursive_refactor(node, settings, depth=0):
     return ast.Branch(expr, left, right)
 
 
-def select_rewrite_expression(name, exprs):
+def select_rewrite_expression(settings, name, exprs):
     """
     Selects an expression to use for re-writing
     based on a list of possible expressions.
@@ -231,7 +244,7 @@ def select_rewrite_expression(name, exprs):
     # Check if this is a contains operator. The contains operator
     # uses static rewriting if we are operating on LiteralSets
     elif name[0] == "ContainsOperator" and name[1] == 'LiteralSet':
-        return contains.select_rewrite_expression(name, exprs)
+        return contains.select_rewrite_expression(settings, name, exprs)
 
     # For negate operators, use the sub-expression
     elif isinstance(exprs[0], ast.NegateOperator):

@@ -1,6 +1,8 @@
 from mock import patch
 from pypred import predicate, merge, ast
 
+DEEP = merge.RefactorSettings.deep()
+
 class TestMerge(object):
     def test_names(self):
         n1 = ast.Literal("foo")
@@ -91,7 +93,7 @@ name matches '^test$' and list contains elem and foo > 20
         l = ast.Literal('foo')
         n = ast.NegateOperator(l)
         name = merge.node_name(n)
-        expr = merge.select_rewrite_expression(name, [n])
+        expr = merge.select_rewrite_expression(DEEP, name, [n])
         assert expr == l
 
     def test_select_expr_logical(self):
@@ -100,10 +102,10 @@ name matches '^test$' and list contains elem and foo > 20
         r = ast.Literal('bar')
         n = ast.LogicalOperator('or', l, r)
         name = merge.node_name(n)
-        expr = merge.select_rewrite_expression(name, [n])
+        expr = merge.select_rewrite_expression(DEEP, name, [n])
         assert expr == l
         n.left = None
-        expr = merge.select_rewrite_expression(name, [n])
+        expr = merge.select_rewrite_expression(DEEP, name, [n])
         assert expr == r
 
     def test_select_expr_first(self):
@@ -111,7 +113,7 @@ name matches '^test$' and list contains elem and foo > 20
         l = ast.Literal('foo')
         r = ast.Literal('bar')
         name = merge.node_name(l)
-        expr = merge.select_rewrite_expression(name, [l, r])
+        expr = merge.select_rewrite_expression(DEEP, name, [l, r])
         assert expr == l
 
     def test_select_expr_compare(self):
@@ -122,7 +124,7 @@ name matches '^test$' and list contains elem and foo > 20
         name = merge.node_name(n)
 
         with patch('pypred.merge.compare.select_rewrite_expression') as c:
-            merge.select_rewrite_expression(name, [n])
+            merge.select_rewrite_expression(DEEP, name, [n])
             assert c.called
 
     def test_select_expr_contains(self):
@@ -133,7 +135,7 @@ name matches '^test$' and list contains elem and foo > 20
         name = merge.node_name(c)
 
         with patch('pypred.merge.contains.select_rewrite_expression') as cr:
-            merge.select_rewrite_expression(name, [c])
+            merge.select_rewrite_expression(DEEP, name, [c])
             assert cr.called
 
     def test_merge(self):
