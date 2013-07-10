@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.6
+
+* Improve the optimization of LiteralSet by making sets as small as possible,
+and avoiding branches on low density sets.
+* SHA: aad3918
+
 ## 0.3.5
 
 * Added Literal Set support. This allows for sane contains with a literal
