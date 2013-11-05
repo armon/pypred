@@ -220,3 +220,4 @@ class Predicate(LiteralResolver):
         if not self.is_valid():
             raise InvalidPredicate
         return self.ast.analyze(self, document)
+

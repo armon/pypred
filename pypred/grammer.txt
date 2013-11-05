@@ -24,3 +24,4 @@ factor : NUMBER
        | NULL
        | EMPTY
        | LPAREN expression RPAREN
+

@@ -264,7 +264,8 @@ class CompareOperator(Node):
     def _check_insensitive_equal(self, eleft, eright):
         """
         Check use the first InsensitiveLiteral to evaluate the
-        evaluated other
+        evaluated other.
+        `eleft` and `eright` are the ctx evaluated values.
         """
         if isinstance(self.left, InsensitiveLiteral):
             return True, self.left == eright
@@ -881,3 +882,4 @@ class LiteralSet(Node):
                 v = i.value
             s.add(v)
         return frozenset(s)
+

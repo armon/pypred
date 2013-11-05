@@ -391,3 +391,4 @@ def count_patterns():
 
     CACHE_PATTERNS = [p1,p2,p3,p4,p5,p6]
     return CACHE_PATTERNS
+

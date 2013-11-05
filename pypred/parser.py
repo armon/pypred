@@ -74,7 +74,6 @@ def t_NUMBER(t):
 
 # Matches anything that is literal `i` prefix quoted
 def t_CASE_INSENSITIVE_STRING(t):
-    # r'("[^"]*"|\'[^\']*\')'
     r'i"(.*?)"|i\'(.*?)\''
     # Check for reserved words
     t.type = reserved.get(t.value,'CASE_INSENSITIVE_STRING')
@@ -251,3 +250,4 @@ def get_parser(lexer=None, debug=0):
         lexer.parser = p
         p.lexer = lexer
     return p
+
