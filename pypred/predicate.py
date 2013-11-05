@@ -28,8 +28,12 @@ class LiteralResolver(object):
         if not possible. This is used for optimizing predicates.
         """
         # Treat anything that is quoted as a string literal
+
         if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
             return identifier[1:-1]
+        elif identifier[0] == 'i':
+            if identifier[1] == identifier[-1] and identifier[1] in ("'", "\""):
+                return identifier[2:-1]
 
         return ast.Undefined()
 
@@ -42,6 +46,10 @@ class LiteralResolver(object):
         # Treat anything that is quoted as a string literal
         if identifier[0] == identifier[-1] and identifier[0] in ("'", "\""):
             return identifier[1:-1]
+
+        elif identifier[0] == 'i':
+            if identifier[1] == identifier[-1] and identifier[1] in ("'", "\""):
+                return identifier[2:-1]
 
         # Check for the identifier in the document
         if identifier in document:
@@ -212,4 +220,3 @@ class Predicate(LiteralResolver):
         if not self.is_valid():
             raise InvalidPredicate
         return self.ast.analyze(self, document)
-

@@ -40,6 +40,7 @@ tokens = (
     'CONTAINS',
     'MATCHES',
     'NUMBER',
+    'CASE_INSENSITIVE_STRING',
     'STRING',
     'TRUE',
     'FALSE',
@@ -69,6 +70,14 @@ t_ignore_COMMENT = r'\#.*'
 
 def t_NUMBER(t):
     r'-?\d+(\.\d+)?'
+    return t
+
+# Matches anything that is literal `i` prefix quoted
+def t_CASE_INSENSITIVE_STRING(t):
+    # r'("[^"]*"|\'[^\']*\')'
+    r'i"(.*?)"|i\'(.*?)\''
+    # Check for reserved words
+    t.type = reserved.get(t.value,'CASE_INSENSITIVE_STRING')
     return t
 
 # Matches either a sequence of non-whitespace
@@ -155,7 +164,7 @@ def p_contains(p):
     p[0] = ast.ContainsOperator(p[1], p[3])
     p[0].set_position(p.lineno(2), p.lexpos(2))
 
-def p_matchse(p):
+def p_matches(p):
     "term : factor MATCHES factor"
     p[0] = ast.MatchOperator(p[1], ast.Regex(p[3]))
     p[0].set_position(p.lineno(2), p.lexpos(2))
@@ -164,6 +173,10 @@ def p_term_factor(p):
     "term : factor"
     p[0] = p[1]
 
+def p_factor_case_insensitive_string(p):
+    "factor : CASE_INSENSITIVE_STRING"
+    p[0] = ast.InsensitiveLiteral(p[1])
+    p[0].set_position(p.lineno(1), p.lexpos(1))
 
 def p_factor_string(p):
     "factor : STRING"
@@ -238,4 +251,3 @@ def get_parser(lexer=None, debug=0):
         lexer.parser = p
         p.lexer = lexer
     return p
-
