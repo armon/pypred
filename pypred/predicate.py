@@ -95,7 +95,7 @@ class Predicate(LiteralResolver):
             Predicate object
         """
         # Validate the predicate
-        if not isinstance(predicate, str):
+        if not isinstance(predicate, basestring):
             raise TypeError("Predicate must be a string!")
 
         # Initialize the literal resolver
