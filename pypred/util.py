@@ -33,11 +33,16 @@ def median(lst):
 
 def max_count(count):
     "Generator for the keys with the maximum value"
-    vals = [(-c, n) for n,c in count.iteritems()]
+    vals = []
+    orig_names = {}
+    for n,c in count.items():
+        orig_names[str(n)] = n
+        vals.append((-c, str(n)))
+
     heapq.heapify(vals)
     while len(vals):
         c, n = heapq.heappop(vals)
-        yield (-c, n)
+        yield (-c, orig_names[n])
 
 def harmonic_mean(lst):
     "Returns the harmonic mean. Will crash if any value is zero."
