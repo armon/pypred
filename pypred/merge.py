@@ -7,15 +7,15 @@ using branches.
 """
 from collections import defaultdict
 
-import ast
-import cache
-import compare
-import contains
-import compact
-import util
-from ast import dup
-from optimizer import optimize
-from tiler import ASTPattern, SimplePattern, tile
+from . import ast
+from . import cache
+from . import compare
+from . import contains
+from . import compact
+from . import util
+from .ast import dup
+from .optimizer import optimize
+from .tiler import ASTPattern, SimplePattern, tile
 
 CACHE_PATTERNS = None
 
@@ -111,7 +111,7 @@ def merge(predicates):
     while len(all_asts) > 1:
         merged = []
         end = len(all_asts)
-        for x in xrange(0, end, 2):
+        for x in range(0, end, 2):
             if x+1 == end:
                 merged.append(all_asts[x])
             else:

@@ -110,7 +110,7 @@ def get_lexer():
 # Implements the parser
 ###
 import ply.yacc as yacc
-import ast
+from . import ast
 
 precedence = (
     ('right', 'AND', 'OR'),

@@ -19,9 +19,9 @@ class TestContains(object):
     def test_select_rewrite_low_density(self):
         "Test rewrite selection"
         settings = merge.RefactorSettings.deep()
-        nums = [ast.Number(x) for x in xrange(100)]
+        nums = [ast.Number(x) for x in range(100)]
         s1 = ast.LiteralSet(nums)
-        nums = [ast.Number(x) for x in xrange(100, 200)]
+        nums = [ast.Number(x) for x in range(100, 200)]
         s2 = ast.LiteralSet(nums)
         l = ast.Literal('foo')
         c1 = ast.ContainsOperator(s1, l)

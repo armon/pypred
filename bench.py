@@ -1,8 +1,11 @@
 import sys
 import time
 import random
-import cPickle
+import pickle
 from pypred import Predicate, PredicateSet, OptimizedPredicateSet
+
+if sys.version < '3':
+    range = xrange
 
 def get_words():
     "Returns a large list of words"
@@ -28,7 +31,7 @@ def timed(f):
         s = time.time()
         r = f(*args, **kwargs)
         e = time.time()
-        print "Spent %0.3f sec invoking %s" % (e-s, f.func_name)
+        print("Spent %0.3f sec invoking %s" % (e-s, f.__name__))
         return r
     return wrapper
 
@@ -36,7 +39,7 @@ def timed(f):
 @timed
 def gen_predicates(num):
     res = []
-    for x in xrange(num):
+    for x in range(num):
         r = random.randint(0,5)
         if r == 0:
             p_str = "name is '%s' and not test" % random.choice(SELECT_WORDS)
@@ -70,8 +73,8 @@ def gen_predicates(num):
 @timed
 def gen_docs(num):
     res = []
-    for x in xrange(num):
-        interests = [random.choice(SELECT_WORDS) for x in xrange(3)]
+    for x in range(num):
+        interests = [random.choice(SELECT_WORDS) for x in range(3)]
         city = random.choice(WORDS)
         age = random.randint(1, 100)
         test = True if random.random() > 0.5 else False
@@ -92,8 +95,8 @@ def make_set_optimized(preds):
     return s
 
 def size(s, name):
-    l = len(cPickle.dumps(s))
-    print "Size: %s %d" % (name, l)
+    l = len(pickle.dumps(s))
+    print("Size: %s %d" % (name, l))
 
 def main(numpreds=100, numdocs=2000, printp=0):
     preds = gen_predicates(numpreds)
@@ -104,9 +107,9 @@ def main(numpreds=100, numdocs=2000, printp=0):
     #size(s2.ast, "Opt")
 
     if printp:
-        print "Predicates:"
+        print("Predicates:")
         for p in preds:
-            print "\t", p.predicate
+            print("\t", p.predicate)
 
     # Time the evaluation
     start = time.time()
@@ -114,8 +117,8 @@ def main(numpreds=100, numdocs=2000, printp=0):
     for d in docs:
         total += len(s1.evaluate(d))
     end = time.time()
-    print "(Naive) Evaluated %d docs across %d predicates in %0.3f seconds" % (numdocs, numpreds, end-start)
-    print "(Naive) Total of %d predicates matched" % total
+    print("(Naive) Evaluated %d docs across %d predicates in %0.3f seconds" % (numdocs, numpreds, end-start))
+    print("(Naive) Total of %d predicates matched" % total)
 
     # Time the evaluation
     start = time.time()
@@ -123,23 +126,23 @@ def main(numpreds=100, numdocs=2000, printp=0):
     for d in docs:
         total_o += len(s2.evaluate(d))
     end = time.time()
-    print "(Opt) Evaluated %d docs across %d predicates in %0.3f seconds" % (numdocs, numpreds, end-start)
-    print "(Opt) Total of %d predicates matched" % total_o
+    print("(Opt) Evaluated %d docs across %d predicates in %0.3f seconds" % (numdocs, numpreds, end-start))
+    print("(Opt) Total of %d predicates matched" % total_o)
 
     if total != total_o:
-        print "Mismatch! Differing inputs:"
+        print("Mismatch! Differing inputs:")
         for d in docs:
             r1 = s1.evaluate(d)
             r2 = s2.evaluate(d)
             if r1 != r2:
-                print "Input:",repr(d)
-                print "Naive:"
+                print("Input:",repr(d))
+                print("Naive:")
                 for p in r1:
-                    print "\t",p.predicate
-                print "Opt:"
+                    print("\t",p.predicate)
+                print("Opt:")
                 for p in r2:
-                    print "\t",p.predicate
-                print
+                    print("\t",p.predicate)
+                print()
         sys.exit(1)
 
 

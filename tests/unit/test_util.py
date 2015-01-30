@@ -8,7 +8,7 @@ class TestUtil(object):
 
     def test_median(self):
         "Tests mode selection"
-        v = list(xrange(0, 100))
+        v = list(range(0, 100))
         assert 50 == util.median(v)
 
     def test_max_count(self):
@@ -20,10 +20,10 @@ class TestUtil(object):
             "zoo": 4
         }
         gen = util.max_count(d)
-        assert ((30, "zip") == gen.next())
-        assert ((20, "bar") == gen.next())
-        assert ((10, "foo") == gen.next())
-        assert ((4, "zoo") == gen.next())
+        assert ((30, "zip") == next(gen))
+        assert ((20, "bar") == next(gen))
+        assert ((10, "foo") == next(gen))
+        assert ((4, "zoo") == next(gen))
 
     def test_harmonic_mean(self):
         "Tests the hamronic mean"

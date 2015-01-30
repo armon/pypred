@@ -405,7 +405,7 @@ class Regex(Node):
         # Try to compile
         try:
             self.re = re.compile(self.value)
-        except Exception, e:
+        except (Exception) as e:
             errs = info["errors"]
             errs.append("Compilation failed for %s" % self.name())
             regexes = info["regex"]
@@ -544,7 +544,7 @@ class Undefined(Node):
     def __deepcopy__(self, memo=None):
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         "Acts like False"
         return False
 
@@ -579,7 +579,7 @@ class Empty(Node):
     def __deepcopy__(self, memo=None):
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         "Acts like False"
         return False
 
@@ -799,7 +799,7 @@ class LiteralSet(Node):
             self.static = True
             self.static_val = static_val
 
-    def __nonzero__(self):
+    def __bool__(self):
         "Acts like False"
         return len(self.value) > 0
 

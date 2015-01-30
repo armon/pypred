@@ -28,28 +28,28 @@ def test_samples():
         pred = pred.strip()
         obj = Predicate(pred)
         if not obj.is_valid():
-            print "Invalid Predicate!"
-            print "Line: ", line
-            print "Predicate: ", pred
+            print("Invalid Predicate!")
+            print("Line: ", line)
+            print("Predicate: ", pred)
             info = obj.errors()
-            print "Errors: ", "\n".join(info["errors"])
-            for k, v in info["regex"].iteritems():
-                print "\t%s : %s" % (k, repr(v))
+            print("Errors: ", "\n".join(info["errors"]))
+            for k, v in list(info["regex"].items()):
+                print("\t%s : %s" % (k, repr(v)))
             assert False
 
         res, ctx = obj.analyze(DOC)
         if not pred.endswith("true") and not pred.endswith("false"):
-            print "Line: ", line
-            print "Unknown result!"
-            print "Predicate: ", pred
+            print("Line: ", line)
+            print("Unknown result!")
+            print("Predicate: ", pred)
             assert False
 
         if (pred.endswith("true") and not res) or (pred.endswith("false") and res):
-            print "Line: ", line
-            print "Predicate: ", pred
-            print "Failures: ", "\n".join(ctx.failed)
-            print "Literals: "
-            for k, v in ctx.literals.iteritems():
-                print "\t%s : %s" % (k, repr(v))
+            print("Line: ", line)
+            print("Predicate: ", pred)
+            print("Failures: ", "\n".join(ctx.failed))
+            print("Literals: ")
+            for k, v in list(ctx.literals.items()):
+                print("\t%s : %s" % (k, repr(v)))
             assert False
 

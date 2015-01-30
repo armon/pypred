@@ -2,7 +2,7 @@
 This module helps to 'compact' an AST tree by replacing
 duplicate nodes with a reference to the same node.
 """
-from tiler import tile, Pattern
+from .tiler import tile, Pattern
 
 
 def compact(node):

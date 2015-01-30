@@ -4,9 +4,9 @@ duplicate expressions with a cached expression.
 """
 from collections import defaultdict
 
-import ast
-from compact import node_name
-from tiler import tile, Pattern
+from . import ast
+from .compact import node_name
+from .tiler import tile, Pattern
 
 
 def cache_expressions(node):
