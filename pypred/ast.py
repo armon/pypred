@@ -548,6 +548,11 @@ class Undefined(Node):
         "Acts like False"
         return False
 
+    # Python 2 legacy
+    def __nonzero__(self):
+        "Acts like False."
+        return False
+
     def __contains__(self, o):
         return False
 
@@ -581,6 +586,11 @@ class Empty(Node):
 
     def __bool__(self):
         "Acts like False"
+        return False
+
+    # Python 2 legacy
+    def __nonzero__(self):
+        "Acts like False."
         return False
 
     def __hash__(self):
@@ -802,6 +812,11 @@ class LiteralSet(Node):
     def __bool__(self):
         "Acts like False"
         return len(self.value) > 0
+
+    # Python 2 legacy
+    def __nonzero__(self):
+        "Acts like False."
+        return False
 
     def __contains__(self, o):
         return o in self.value
