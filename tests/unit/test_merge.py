@@ -1,5 +1,9 @@
-from mock import patch
 from pypred import predicate, merge, ast
+
+try:
+    from mock import patch
+except ImportError:
+    from unittest.mock import patch
 
 DEEP = merge.RefactorSettings.deep()
 

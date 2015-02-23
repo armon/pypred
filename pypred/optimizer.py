@@ -102,7 +102,11 @@ def optimization_patterns():
     p13 = SimplePattern("types:ContainsOperator", "types:Empty,Undefined")
     p13.replacement = ast.Constant(False)
 
-    CACHE_PATTERNS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13]
+    # Remove empty sets (python3)
+    p14 = SimplePattern("types:LiteralSet AND value:frozenset()")
+    p14.replacement = ast.Empty()
+
+    CACHE_PATTERNS = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14]
     return CACHE_PATTERNS
 
 
