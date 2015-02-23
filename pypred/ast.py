@@ -405,7 +405,7 @@ class Regex(Node):
         # Try to compile
         try:
             self.re = re.compile(self.value)
-        except Exception, e:
+        except (Exception) as e:
             errs = info["errors"]
             errs.append("Compilation failed for %s" % self.name())
             regexes = info["regex"]
@@ -544,8 +544,13 @@ class Undefined(Node):
     def __deepcopy__(self, memo=None):
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         "Acts like False"
+        return False
+
+    # Python 2 legacy
+    def __nonzero__(self):
+        "Acts like False."
         return False
 
     def __contains__(self, o):
@@ -579,8 +584,13 @@ class Empty(Node):
     def __deepcopy__(self, memo=None):
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         "Acts like False"
+        return False
+
+    # Python 2 legacy
+    def __nonzero__(self):
+        "Acts like False."
         return False
 
     def __hash__(self):
@@ -799,9 +809,14 @@ class LiteralSet(Node):
             self.static = True
             self.static_val = static_val
 
-    def __nonzero__(self):
+    def __bool__(self):
         "Acts like False"
         return len(self.value) > 0
+
+    # Python 2 legacy
+    def __nonzero__(self):
+        "Acts like False."
+        return False
 
     def __contains__(self, o):
         return o in self.value

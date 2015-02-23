@@ -6,9 +6,9 @@ make other inferences. For example, if we assume "a > b",
 then we know that "b < a", "b <=a" are both true, and
 we can safely rewrite that as a constant.
 """
-import ast
-import util
-from tiler import ASTPattern, SimplePattern, tile
+from . import ast
+from . import util
+from .tiler import ASTPattern, SimplePattern, tile
 
 EQUALITY = ("=", "is")
 INEQUALITY = ("!=",)

@@ -6,9 +6,9 @@ predicates. It provides both a naive implementation that
 sequentially evaluates predicates, as well as an optimizing
 implementation.
 """
-from merge import merge, refactor
-from predicate import LiteralResolver
-import ast
+from .merge import merge, refactor
+from .predicate import LiteralResolver
+from . import ast
 
 
 class PredicateSet(object):

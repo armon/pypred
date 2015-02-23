@@ -8,9 +8,9 @@ we can safely rewrite that as a constant.
 """
 from collections import defaultdict
 
-import ast
-import util
-from tiler import ASTPattern, SimplePattern, tile
+from . import ast
+from . import util
+from .tiler import ASTPattern, SimplePattern, tile
 
 def select_rewrite_expression(settings, name, exprs):
     """

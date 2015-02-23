@@ -14,7 +14,7 @@ def mode(lst):
     # Determine the maximum count
     max = 0
     item = None
-    for val, count in counts.iteritems():
+    for val, count in counts.items():
         if count > max:
             max = count
             item = val
@@ -28,16 +28,21 @@ def median(lst):
     lst.sort()
 
     # Get the middle index
-    middle = len(lst) / 2
+    middle = len(lst) // 2
     return lst[middle]
 
 def max_count(count):
     "Generator for the keys with the maximum value"
-    vals = [(-c, n) for n,c in count.iteritems()]
+    vals = []
+    orig_names = {}
+    for n,c in count.items():
+        orig_names[str(n)] = n
+        vals.append((-c, str(n)))
+
     heapq.heapify(vals)
     while len(vals):
         c, n = heapq.heappop(vals)
-        yield (-c, n)
+        yield (-c, orig_names[n])
 
 def harmonic_mean(lst):
     "Returns the harmonic mean. Will crash if any value is zero."

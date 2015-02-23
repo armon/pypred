@@ -1,6 +1,12 @@
-from parser import get_lexer, get_parser
-import ast
+from .parser import get_lexer, get_parser
+from . import ast
+import collections
 
+# python2/3 basestring compatibility
+try:
+    unicode = unicode
+except NameError: # python3
+    basestring = (str, bytes)
 
 class InvalidPredicate(Exception):
     "Raised for evaluation of an invalid predicate"
@@ -65,7 +71,7 @@ class LiteralResolver(object):
         # Check if there is a resolver
         if identifier in self.resolvers:
             relv = self.resolvers[identifier]
-            if callable(relv):
+            if isinstance(relv, collections.Callable):
                 return relv()
             else:
                 return relv
@@ -118,7 +124,7 @@ class Predicate(LiteralResolver):
             self.ast_validated = False
             self.ast_valid = False
             self.ast_errors = None
-        except Exception, e:
+        except (Exception) as e:
             self.ast = None
             self.ast_validated = True
             self.ast_valid = False
