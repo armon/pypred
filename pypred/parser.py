@@ -30,6 +30,7 @@ tokens = (
     'LESS_THAN',
     'LESS_THAN_EQUALS',
     'EQUALS',
+    'DBL_EQUALS',
     'NOT_EQUALS',
     'IS_EQUALS',
     'IS_NOT_EQUALS',
@@ -56,6 +57,7 @@ t_LESS_THAN = r'<'
 t_LESS_THAN_EQUALS = r'<='
 
 t_EQUALS = r'='
+t_DBL_EQUALS = r'=='
 t_NOT_EQUALS = r'!='
 
 t_LPAREN = r'\('
@@ -148,6 +150,11 @@ def p_term_comparison(p):
             | factor IS_NOT_EQUALS factor
             | factor IS_EQUALS factor"""
     p[0] = ast.CompareOperator(p[2], p[1], p[3])
+    p[0].set_position(p.lineno(2), p.lexpos(2))
+
+def p_term_dbl_equals(p):
+    "term : factor DBL_EQUALS factor"
+    p[0] = ast.CompareOperator("=", p[1], p[3])
     p[0].set_position(p.lineno(2), p.lexpos(2))
 
 def p_contains(p):

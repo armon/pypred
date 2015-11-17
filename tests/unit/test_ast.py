@@ -182,7 +182,7 @@ class TestAST(object):
         assert ctx.literals["l"] == True
 
     @pytest.mark.parametrize(("type",), [
-        (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
+        (">=",), (">",), ("<",), ("<=",), ("=",), ("==",), ("!=",), ("is",)])
     def test_compare(self, type):
         l = ast.Literal("l")
         r = ast.Literal("r")
@@ -204,7 +204,7 @@ class TestAST(object):
         assert ctx.literals["r"] == d["r"]
 
     @pytest.mark.parametrize(("type",), [
-        (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
+        (">=",), (">",), ("<",), ("<=",), ("=",), ("==",), ("!=",), ("is",)])
     def test_compare_undef(self, type):
         l = ast.Literal("l")
         r = ast.Literal("r")
@@ -223,7 +223,7 @@ class TestAST(object):
         assert ctx.literals["r"] == ast.Undefined()
 
     @pytest.mark.parametrize(("type",), [
-        (">=",), (">",), ("<",), ("<=",), ("=",), ("!=",), ("is",)])
+        (">=",), (">",), ("<",), ("<=",), ("=",), ("==",), ("!=",), ("is",)])
     def test_compare_empty(self, type):
         l = ast.Literal("l")
         r = ast.Literal("r")

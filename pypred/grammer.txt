@@ -8,6 +8,7 @@ term : factor GREATER_THAN factor
        | factor LESS_THAN factor
        | factor LESS_THAN_EQUALS factor
        | factor EQUALS factor
+       | factor DBL_EQUALS factor
        | factor NOT_EQUALS factor
        | factor IS_EQUALS NOT factor
        | factor IS_EQUALS factor
