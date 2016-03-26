@@ -77,8 +77,11 @@ def t_NUMBER(t):
 # or anything that is quoted
 def t_STRING(t):
     r'([\w_\-.:;]+|"[^"]*"|\'[^\']*\')'
+    l = t.value.lower()
+    if l in reserved:
+        t.value = l
     # Check for reserved words
-    t.type = reserved.get(t.value,'STRING')
+    t.type = reserved.get(t.value, 'STRING')
     return t
 
 # Track the newlines
