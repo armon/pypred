@@ -28,5 +28,5 @@ setup(name='pypred',
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries"
       ],
-      install_requires=["ply==3.4"]
+      install_requires=["ply>=3.4"]
     )
