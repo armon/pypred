@@ -1,5 +1,6 @@
-PyPred [![Build Status](https://travis-ci.org/armon/pypred.png)](https://travis-ci.org/armon/pypred)
+PyPred
 ======
+[![Build Status](https://travis-ci.org/armon/pypred.png)](https://travis-ci.org/armon/pypred)
 
 PyPred is a package to do predicate evaluation in Python. It uses a
 PLY (Lex/Yacc for Python) to parse inputs into an AST tree which it
@@ -117,8 +118,8 @@ The OptimizedPredicateSet supports an extended set of API's:
 * OptSet.compile\_ast() : Forces compilation of the interal AST
 
 * OptSet.finalize() : Prunes the AST of sub-predicates, and removes any instance data that is not used
-as part of the evaluation of the optimized set. Not usually needed, but can reduce the total memory
-footprint, and is useful if the object is going to be pickled.
+  as part of the evaluation of the optimized set. Not usually needed, but can reduce the total memory
+  footprint, and is useful if the object is going to be pickled.
 
 The standard PredicateSet relies on the underlying predicates to do
 resolution of literals, however the OptimizedPredicateSet implements
@@ -155,9 +156,9 @@ Here is an example of the output during a failed evaluation:
     assert res == False
 
     pprint.pprint(ctx.failed)
-    ["Right side: 'CPU load' not in left side: [] for ContainsOperator at line: 1, col 45",
-                'Left hand side of AND operator at line: 1, col 65 failed',
-                'Right hand side of AND operator at line: 1, col 34 failed']
+     ["Right side: 'CPU load' not in left side: [] for ContainsOperator at line: 1, col 45",
+                 'Left hand side of AND operator at line: 1, col 65 failed',
+                 'Right hand side of AND operator at line: 1, col 34 failed']
 
     pprint.pprint(ctx.literals)
      {'"CPU load"': 'CPU load',
