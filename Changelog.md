@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+* Python3 support
+* Added support for `==` operator
+* Permit unicode in predicates
+* Support for case insensitive operators
+* Tested on python 2.7, 3.4, 3.5 & pypy
+* SHA: 
+
 ## 0.3.6
 
 * Improve the optimization of LiteralSet by making sets as small as possible,
