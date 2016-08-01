@@ -26,6 +26,10 @@ setup(name='pypred',
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Topic :: Software Development :: Libraries"
       ],
       install_requires=["ply>=3.4"]
