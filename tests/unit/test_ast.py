@@ -52,7 +52,8 @@ class TestAST(object):
         assert not valid
         assert "Compilation failed" in info["errors"][0]
         assert "(abc" in info["regex"]
-        assert info["regex"]["(abc"] == "unbalanced parenthesis"
+        assert info["regex"]["(abc"] == "unbalanced parenthesis" or\
+               info["regex"]["(abc"].startswith("missing ), unterminated subpattern")
 
     def test_bad_regex_inp(self):
         a = self.ast("foo matches '(abc'")
@@ -60,7 +61,8 @@ class TestAST(object):
         assert not valid
         assert "Compilation failed" in info["errors"][0]
         assert "(abc" in info["regex"]
-        assert info["regex"]["(abc"] == "unbalanced parenthesis"
+        assert info["regex"]["(abc"] == "unbalanced parenthesis" or\
+               info["regex"]["(abc"].startswith("missing ), unterminated subpattern")
 
     def test_match_bad_arg(self):
         a = ast.MatchOperator(ast.Literal("foo"), ast.Literal("bar"))

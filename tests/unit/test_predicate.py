@@ -39,7 +39,8 @@ class TestPredicate(object):
         assert not p.is_valid()
         errs = p.errors()
         assert 'Compilation failed for' in errs["errors"][0]
-        assert 'unbalanced parenthesis' == errs["regex"]["(unbal"]
+        assert 'unbalanced parenthesis' == errs["regex"]["(unbal"] or\
+               errs["regex"]["(unbal"].startswith("missing ), unterminated subpattern")
 
     def test_resolve_missing(self):
         p = Predicate("name is 'Jack' and friend is 'Jill'")
