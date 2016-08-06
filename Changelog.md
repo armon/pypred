@@ -6,7 +6,7 @@
 * Permit unicode in predicates
 * Support for case insensitive operators
 * Tested on python 2.7, 3.4, 3.5 & pypy
-* SHA: 
+* SHA: ccc76fb
 
 ## 0.3.6
 
