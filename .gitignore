@@ -1,6 +1,10 @@
 *.py[co]
 env
 build
+.cache
+.coverage
+.pyenv
+.tox
 
 # Ignore the parser outputs
 parsetab.py

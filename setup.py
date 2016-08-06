@@ -1,5 +1,5 @@
 from setuptools import setup
-__version__ = "0.3.6"
+__version__ = "0.4.0"
 
 # Get the long description by reading the README
 try:
@@ -26,7 +26,11 @@ setup(name='pypred',
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Topic :: Software Development :: Libraries"
       ],
-      install_requires=["ply==3.4"]
+      install_requires=["ply>=3.4"]
     )
