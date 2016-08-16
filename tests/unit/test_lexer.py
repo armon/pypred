@@ -90,7 +90,7 @@ class TestLexer(object):
         tokens = list(lexer)
         assert [t.type for t in tokens] == ['STRING', 'EQUALS', 'STRING', 'STRING']
         assert len(lexer.errors) == 1
-        assert lexer.errors[0] == ('!!', 3, 5)
+        assert lexer.errors[0] == ('!!', 5, 3)
 
     def test_comments(self):
         inp = "# foo is bar\nfoo and bar"

@@ -20,9 +20,12 @@ class TestPredicate(object):
 """
 
     def test_error(self):
-        p = Predicate("foo is\nbar fun")
+        p = Predicate("foo is\nbar !! fun")
         assert not p.is_valid()
-        assert p.errors()['errors'] == ['Syntax error with fun at line 2, col 5']
+        assert p.errors()['errors'] == [
+            'Failed to parse characters !! at line 2, col 5',
+            'Syntax error with fun at line 2, col 8',
+        ]
 
     def test_invalid_end(self):
         p = Predicate("name is 'Jack' and ")

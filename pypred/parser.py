@@ -102,11 +102,11 @@ def compute_column(lexer, lexpos):
 def t_error(t):
     if " " in t.value:
         idx = t.value.index(" ")
-        error_loc = (t.value[:idx], t.lexer.lineno, compute_column(t.lexer, t.lexer.lexpos))
+        error_loc = (t.value[:idx], compute_column(t.lexer, t.lexer.lexpos), t.lexer.lineno)
         t.lexer.errors.append(error_loc)
         t.lexer.skip(idx)
     else:
-        error_loc = (t.value, t.lexer.lineno, compute_column(t.lexer, t.lexer.lexpos))
+        error_loc = (t.value, compute_column(t.lexer, t.lexer.lexpos), t.lexer.lineno)
         t.lexer.errors.append(error_loc)
         t.lexer.skip(1)
 
