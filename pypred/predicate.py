@@ -162,7 +162,7 @@ class Predicate(LiteralResolver):
         if self.lexer_errors:
             for char, pos, line in self.lexer_errors:
                 e = "Failed to parse characters %s at line %d, col %d" % \
-                        (char, pos, line)
+                        (char, line, pos)
                 errors.append(e)
 
         # Add the parser errors in a friendly way
@@ -171,7 +171,7 @@ class Predicate(LiteralResolver):
                 if isinstance(err, tuple) and len(err) == 5:
                     _, _, val, pos, line = err
                     e = "Syntax error with %s at line %d, col %d" % \
-                        (val, pos, line)
+                        (val, line, pos)
                     errors.append(e)
                 elif isinstance(err, str):
                     errors.append(err)

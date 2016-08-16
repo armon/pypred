@@ -81,7 +81,16 @@ class TestLexer(object):
         tokens = list(lexer)
         assert [t.type for t in tokens] == ['STRING']
         assert len(lexer.errors) == 1
-        assert lexer.errors[0] == ('!!', 0, 1)
+        assert lexer.errors[0] == ('!!', 1, 1)
+
+    def test_error_multiline(self):
+        inp = "\r\nfoo =\nbar !! fun"
+        lexer = parser.get_lexer()
+        lexer.input(inp)
+        tokens = list(lexer)
+        assert [t.type for t in tokens] == ['STRING', 'EQUALS', 'STRING', 'STRING']
+        assert len(lexer.errors) == 1
+        assert lexer.errors[0] == ('!!', 3, 5)
 
     def test_comments(self):
         inp = "# foo is bar\nfoo and bar"

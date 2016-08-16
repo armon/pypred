@@ -90,17 +90,23 @@ def t_newline(t):
     t.lexer.lineno += len(t.value)
 
 # The ignore characters
-t_ignore = ' \t\n'
+t_ignore = ' \t\r'
+
+# Compute column. 
+#     lexer is the lexer instance
+#     lexpos is the token position
+def compute_column(lexer, lexpos):
+    return lexpos - lexer.lexdata.rfind('\n', 0, lexpos)
 
 # Error handler
 def t_error(t):
     if " " in t.value:
         idx = t.value.index(" ")
-        error_loc = (t.value[:idx], t.lexer.lexpos, t.lexer.lineno)
+        error_loc = (t.value[:idx], t.lexer.lineno, compute_column(t.lexer, t.lexer.lexpos))
         t.lexer.errors.append(error_loc)
         t.lexer.skip(idx)
     else:
-        error_loc = (t.value, t.lexer.lexpos, t.lexer.lineno)
+        error_loc = (t.value, t.lexer.lineno, compute_column(t.lexer, t.lexer.lexpos))
         t.lexer.errors.append(error_loc)
         t.lexer.skip(1)
 
@@ -126,12 +132,12 @@ def p_expression_binop(p):
     """expression : expression AND expression
                   | expression OR expression"""
     p[0] = ast.LogicalOperator(p[2], p[1], p[3])
-    p[0].set_position(p.lineno(2), p.lexpos(2))
+    p[0].set_position(p.lineno(2), compute_column(p.lexer, p.lexpos(2)))
 
 def p_expression_not(p):
     "expression : NOT expression"
     p[0] = ast.NegateOperator(p[2])
-    p[0].set_position(p.lineno(1), p.lexpos(1))
+    p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
 
 def p_expression_term(p):
     "expression : term"
@@ -141,7 +147,7 @@ def p_expression_term(p):
 def p_term_is_not(p):
     "term : factor IS_EQUALS NOT factor"
     p[0] = ast.CompareOperator("!=", p[1], p[4])
-    p[0].set_position(p.lineno(2), p.lexpos(2))
+    p[0].set_position(p.lineno(2), compute_column(p.lexer, p.lexpos(2)))
 
 def p_term_comparison(p):
     """term : factor GREATER_THAN factor
@@ -153,22 +159,22 @@ def p_term_comparison(p):
             | factor IS_NOT_EQUALS factor
             | factor IS_EQUALS factor"""
     p[0] = ast.CompareOperator(p[2], p[1], p[3])
-    p[0].set_position(p.lineno(2), p.lexpos(2))
+    p[0].set_position(p.lineno(2), compute_column(p.lexer, p.lexpos(2)))
 
 def p_term_dbl_equals(p):
     "term : factor DBL_EQUALS factor"
     p[0] = ast.CompareOperator("=", p[1], p[3])
-    p[0].set_position(p.lineno(2), p.lexpos(2))
+    p[0].set_position(p.lineno(2), compute_column(p.lexer, p.lexpos(2)))
 
 def p_contains(p):
     "term : factor CONTAINS factor"
     p[0] = ast.ContainsOperator(p[1], p[3])
-    p[0].set_position(p.lineno(2), p.lexpos(2))
+    p[0].set_position(p.lineno(2), compute_column(p.lexer, p.lexpos(2)))
 
 def p_matchse(p):
     "term : factor MATCHES factor"
     p[0] = ast.MatchOperator(p[1], ast.Regex(p[3]))
-    p[0].set_position(p.lineno(2), p.lexpos(2))
+    p[0].set_position(p.lineno(2), compute_column(p.lexer, p.lexpos(2)))
 
 def p_term_factor(p):
     "term : factor"
@@ -178,12 +184,12 @@ def p_term_factor(p):
 def p_factor_string(p):
     "factor : STRING"
     p[0] = ast.Literal(p[1])
-    p[0].set_position(p.lineno(1), p.lexpos(1))
+    p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
 
 def p_factor_number(p):
     "factor : NUMBER"
     p[0] = ast.Number(p[1])
-    p[0].set_position(p.lineno(1), p.lexpos(1))
+    p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
 
 def p_factor_constants(p):
     """factor : TRUE
@@ -193,19 +199,19 @@ def p_factor_constants(p):
               | EMPTY"""
     if p[1] == "true":
         p[0] = ast.Constant(True)
-        p[0].set_position(p.lineno(1), p.lexpos(1))
+        p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
     elif p[1] == "false":
         p[0] = ast.Constant(False)
-        p[0].set_position(p.lineno(1), p.lexpos(1))
+        p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
     elif p[1] == "null":
         p[0] = ast.Constant(None)
-        p[0].set_position(p.lineno(1), p.lexpos(1))
+        p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
     elif p[1] == "undefined":
         p[0] = ast.Undefined()
-        p[0].set_position(p.lineno(1), p.lexpos(1))
+        p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
     elif p[1] == "empty":
         p[0] = ast.Empty()
-        p[0].set_position(p.lineno(1), p.lexpos(1))
+        p[0].set_position(p.lineno(1), compute_column(p.lexer, p.lexpos(1)))
     else:
         raise SyntaxError
 
@@ -234,7 +240,7 @@ def p_error(p):
     if p is None:
         raise SyntaxError("Unexpected end of predicate!")
     else:
-        err = ("Syntax error at token", p.type, p.value, p.lexpos, p.lineno)
+        err = ("Syntax error at token", p.type, p.value, compute_column(p.lexer, p.lexpos), p.lineno)
         parser = p.lexer.parser
         parser.errors.append(err)
         parser.errok()
