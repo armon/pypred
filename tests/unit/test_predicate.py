@@ -5,19 +5,27 @@ from pypred import Predicate, ast
 
 class TestPredicate(object):
     def test_jack_and_jill(self):
-        p = Predicate("name is 'Jack' and friend is 'Jill'")
+        p = Predicate("name is 'Jack'\r\nand friend is 'Jill'")
         assert p.is_valid()
         assert p.evaluate({"name": "Jack", "friend": "Jill"})
         res, ctx = p.analyze({"name": "Jack", "friend": "Jill"})
         assert res
-        assert p.description() == """AND operator at line: 1, col 15
-	IS comparison at line: 1, col 5
-		Literal name at line: 1, col 0
-		Literal 'Jack' at line: 1, col 8
-	IS comparison at line: 1, col 26
-		Literal friend at line: 1, col 19
-		Literal 'Jill' at line: 1, col 29
+        assert p.description() == """AND operator at line: 2, col 1
+	IS comparison at line: 1, col 6
+		Literal name at line: 1, col 1
+		Literal 'Jack' at line: 1, col 9
+	IS comparison at line: 2, col 12
+		Literal friend at line: 2, col 5
+		Literal 'Jill' at line: 2, col 15
 """
+
+    def test_error(self):
+        p = Predicate("foo is\nbar !! fun")
+        assert not p.is_valid()
+        assert p.errors()['errors'] == [
+            'Failed to parse characters !! at line 2, col 5',
+            'Syntax error with fun at line 2, col 8',
+        ]
 
     def test_invalid_end(self):
         p = Predicate("name is 'Jack' and ")
