@@ -282,7 +282,7 @@ def rewrite_ast(node, name, expr, assumed_result):
 
 def count_expressions(node):
     """
-    Folds over the AST and counts the expressions that are
+    Folds over the AST and counts the expressions that
     can be refactored. Each named expression also maps to the
     AST nodes the name represents.
 

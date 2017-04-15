@@ -261,6 +261,18 @@ class CompareOperator(Node):
         # Reverse the op type
         self.type = self.OP_REVERSE[self.type]
 
+    def _check_insensitive_equal(self, eleft, eright):
+        """
+        Check use the first InsensitiveLiteral to evaluate the
+        evaluated other.
+        `eleft` and `eright` are the ctx evaluated values.
+        """
+        if isinstance(self.left, InsensitiveLiteral):
+            return True, self.left == eright
+        if isinstance(self.right, InsensitiveLiteral):
+            return True, self.right == eleft
+        return False, None
+
     @failure_info
     def eval(self, ctx):
         left = self.left.eval(ctx)
@@ -268,8 +280,17 @@ class CompareOperator(Node):
 
         # Check if this is an equality check
         if self.type in ("=", "is"):
+            is_insensitive, comparison = self._check_insensitive_equal(left, right)
+            if is_insensitive:
+                return comparison
+
             return left == right
+
         elif self.type == "!=":
+            is_insensitive, comparison = self._check_insensitive_equal(left, right)
+            if is_insensitive:
+                return not comparison
+
             return left != right
 
         # Compare operations against undefined or empty always fail
@@ -454,7 +475,7 @@ class Literal(Node):
 
     def eval(self, ctx):
         # Use the EvalContext to avoid any non-deterministic
-        # resolution that can strange errors.
+        # resolution that can give strange errors.
         if self.value in ctx.literals:
             return ctx.literals[self.value]
 
@@ -466,6 +487,35 @@ class Literal(Node):
 
         # Cache the result
         ctx.literals[self.value] = v
+        return v
+
+
+class InsensitiveLiteral(Literal):
+    "Case Insensitive String literal"
+    def __init__(self, *args):
+        super(InsensitiveLiteral, self).__init__(*args)
+
+    def __eq__(self, other):
+        if isinstance(other, Literal):
+            same_len = len(self.value[2:-1]) == len(other.value)
+            return re.match(self.value[2:-1], other.value, re.I) and same_len
+        elif isinstance(other, InsensitiveLiteral):
+            return re.match(self.value, other.value, re.I)
+        elif isinstance(other, basestring):
+            same_len = len(self.value[2:-1]) == len(other)
+            return re.match(self.value[2:-1], other, re.I) and same_len
+        return False
+
+    def name(self):
+        return "InsensitiveLiteral %s at %s" % (self.value, self.position)
+
+    def eval(self, ctx):
+        # Use the predicate class to resolve the identifier
+        if self.static:
+            v = self.static_val
+        else:
+            v = ctx.resolve_identifier(self.value)
+
         return v
 
 

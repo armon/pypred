@@ -17,6 +17,7 @@ term : factor GREATER_THAN factor
        | factor
 
 factor : NUMBER
+       | CASE_INSENSITIVE_STRING
        | STRING
        | TRUE
        | FALSE
