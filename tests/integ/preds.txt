@@ -3,6 +3,8 @@ name = "Jack" # true
 name is "Jack" # true
 name is "Jack" and friend is 'Jill' # true
 server matches 'east-web-\d+' and load >= 1 # true
+haiku matches /^my life,\s-.Gow much.*brief\.$/mis # false
+haiku matches /^my life,\s-.How much.*brief\.$/mis and val is 100 # true
 errors contains 'cpu load' or load >= 2 # true
 errors is empty or errors contains 'disk full' # true
 status < 300 # false

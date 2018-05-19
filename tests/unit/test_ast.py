@@ -64,6 +64,28 @@ class TestAST(object):
         assert info["regex"]["(abc"] == "unbalanced parenthesis" or\
                info["regex"]["(abc"].startswith("missing ), unterminated subpattern")
 
+    def test_regex_without_modifiers(self):
+        a = self.ast("foo matches 'abc'")
+        b = self.ast('foo matches "abc"')
+        c = self.ast("foo matches /abc/")
+        a_valid, _ = a.validate()
+        b_valid, _ = b.validate()
+        c_valid, _ = c.validate()
+        assert a_valid
+        assert b_valid
+        assert c_valid
+
+    def test_regex_with_modifiers(self):
+        a = self.ast("foo matches /^abc+[0-9]{2,}$/uims")
+        valid, _ = a.validate()
+        assert valid
+
+    def test_regex_modifiers(self):
+        a = self.ast("foo matches /abc/uis")
+        b = self.ast("foo matches /^abc+[0-9]{2,}$/uims")
+        assert a.right.modifiers == 'uis'
+        assert b.right.modifiers == 'uims'
+
     def test_match_bad_arg(self):
         a = ast.MatchOperator(ast.Literal("foo"), ast.Literal("bar"))
         valid, info = a.validate()
