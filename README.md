@@ -61,6 +61,24 @@ or that the score is less than 10 if a low score is desirable.
 This checks for any webserver hostname matching a numeric suffix, such as "east-web-001", with
 "CPU load" being reported as an error in a non-test environment.
 
+If you want to use regular expression with modifiers, you can try out the following example:
+
+    haiku matches /^my life,\s-.How much.*brief\.$/mis
+
+This regular expression will match the following haiku:
+
+    My life, -
+    How much more of it remains?
+    The night is brief.
+
+Notice that in previous example we used slashes instead of quotation marks. This allowed us to set modifiers (after slashes). This behaviour is very similar to Javascript regular expressions. Supported modifiers are:
+
+* _i_ (ignore case)
+* _m_ (multiline)
+* _s_ (dotall)
+* _u_ (unicode)
+* _l_ (locale)
+
 Literal sets can be used to check for multiple clauses:
 
     {"WARN" "ERR" "CRIT"} contains error_level or {500 501 503} contains status_code

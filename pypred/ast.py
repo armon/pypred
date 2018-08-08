@@ -380,20 +380,39 @@ class MatchOperator(Node):
 
 class Regex(Node):
     "Regular expression literal"
+    regex_extractor = re.compile("^['\"/](.*)['\"/]([simluSIMLU]*)$")
+    modifiers_def = {
+        's': re.DOTALL,
+        'i': re.IGNORECASE,
+        'm': re.MULTILINE,
+        'l': re.LOCALE,
+        'u': re.UNICODE
+    }
+
+
     def __init__(self, value):
         # Unpack a Node object if we are given one
         if isinstance(value, Node):
-            self.value = value.value.strip("'\"")
+            regex = self.regex_extractor.match(value.value)
+            self.value = regex.group(1) if regex else value.value.strip("'\"")
             self.position = value.position
+            self.modifiers = regex.group(2).lower() if regex else ''
         else:
             self.value = value
+            self.modifiers = ''
         self.re = None
 
     def __deepcopy__(self, memo=None):
         return self
 
     def name(self):
-        return "Regex %s at %s" % (repr(self.value), self.position)
+        return "Regex /%s/%s at %s" % (self.value, self.modifiers, self.position)
+
+    def _build_re(self):
+        modifiers = 0
+        for m in self.modifiers:
+            modifiers |= self.modifiers_def[m]
+        return re.compile(self.value, modifiers)
 
     def _validate(self, info):
         if not isinstance(self.value, str):
@@ -404,7 +423,7 @@ class Regex(Node):
 
         # Try to compile
         try:
-            self.re = re.compile(self.value)
+            self.re = self._build_re()
         except (Exception) as e:
             errs = info["errors"]
             errs.append("Compilation failed for %s" % self.name())
@@ -416,7 +435,7 @@ class Regex(Node):
 
     def eval(self, ctx):
         if not self.re:
-            self.re = re.compile(self.value)
+            self.re = self._build_re()
         return self.re
 
 

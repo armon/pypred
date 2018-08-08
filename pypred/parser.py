@@ -76,7 +76,7 @@ def t_NUMBER(t):
 # Matches either a sequence of non-whitespace
 # or anything that is quoted
 def t_STRING(t):
-    r'([\w_\-.:;]+|"[^"]*"|\'[^\']*\')'
+    r'([\w_\-.:;]+|"[^"]*"|\'[^\']*\'|/[^/]*/[simluSIMLU]*)'
     l = t.value.lower()
     if l in reserved:
         t.value = l

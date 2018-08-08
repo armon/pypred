@@ -7,19 +7,7 @@ of a predicate set.
 import os
 import os.path
 from pypred import Predicate, PredicateSet, OptimizedPredicateSet
-
-
-DOC = {
-    "name": "Jack",
-    "friend": "Jill",
-    "server": "east-web-001",
-    "load": 1.1,
-    "errors": ["disk full", "cpu load"],
-    "status": 500,
-    "nested": {"source": "twitter", "tweet": {"text": "I love coffee!"}},
-    "val": 100,
-    "val2": 200,
-}
+from . import DOC
 
 
 def test_samples():
