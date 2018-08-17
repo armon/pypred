@@ -72,7 +72,7 @@ class LiteralResolver(object):
         if identifier in self.resolvers:
             relv = self.resolvers[identifier]
             if isinstance(relv, collections.Callable):
-                return relv()
+                return relv(document)
             else:
                 return relv
 
